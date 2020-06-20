@@ -1,0 +1,13 @@
+*.pyc
+tx*
+ttx*
+.*.swp
+*.xml
+*.temp
+*.test
+*.pkl
+nohup.out
+.*DS_Store
+conflocal.py
+__pycache__
+*.JSON
