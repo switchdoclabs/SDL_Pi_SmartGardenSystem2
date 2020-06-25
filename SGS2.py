@@ -11,7 +11,7 @@ from __future__ import print_function
 from builtins import range
 from past.utils import old_div
 
-SGSVERSION = "007"
+SGSVERSION = "008"
 
 #imports 
 
@@ -461,8 +461,10 @@ if __name__ == '__main__':
     
         AccessMS.initMoistureSensors()
         AccessMS.readAllMoistureSensors()
-    
-        scheduler.add_job(AccessMS.readAllMoistureSensors, 'interval', minutes=15)
+        
+        # MQTT updates the Moisture Sensor arrays 
+
+        #scheduler.add_job(AccessMS.readAllMoistureSensors, 'interval', minutes=15)
     
         # sensor timed water and Timed
         tNow  = datetime.datetime.now()

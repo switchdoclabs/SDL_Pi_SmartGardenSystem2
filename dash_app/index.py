@@ -19,6 +19,7 @@ import status_page
 import valve_graphs
 import log_page
 import weather_page
+import p_v_programming
 
 from non_impl import NotImplPage 
 
@@ -108,6 +109,9 @@ def display_page(pathname):
     if pathname == '/weather_page':
         myLayout = weather_page.WeatherPage()
         myLayout2 = ""
+    if pathname == '/p_v_programming':
+        myLayout = p_v_programming.PVProgrammingPage()
+        myLayout2 = ""
     
     #print("myLayout= ",myLayout)
     #print("myLayout2= ",myLayout2)
@@ -187,15 +191,15 @@ def logpageupdate(n_intervals, id, value):
         data = log_page.fetchSystemLog()
         fig = log_page.buildTableFig(data,"System Log")
     
-    if (id['index'] == "sensorlog"):
-        data = log_page.fetchSensorLog()
-        fig = log_page.buildTableFig(data,"Sensor Log")
-
     if (id['index'] == "valvelog"):
         data = log_page.fetchValveLog()
         fig = log_page.buildTableFig(data,"Valve Log")
         return fig
     
+    if (id['index'] == "sensorlog"):
+        data = log_page.fetchSensorLog()
+        fig = log_page.buildTableFig(data,"Sensor Log")
+
     print("<log_page table Update complete",id['index'])
     return fig
    else:
@@ -451,4 +455,4 @@ def updateWeatherGraphPage(n_intervals,id, value):
 ##########################
 
 if __name__ == '__main__':
-    app.run_server(host='0.0.0.0')
+    app.run_server(debug=True, host='0.0.0.0')

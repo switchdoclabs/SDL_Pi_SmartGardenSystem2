@@ -7,6 +7,8 @@ import state
 import config
 import json
 import pclogging
+import datetime
+
 
 def on_WirelessMQTTClientconnect(client, userdata, flags, rc):
 
@@ -28,6 +30,7 @@ MQTTTESTMESSAGE = 0
 MQTTVALVECHANGE = 1
 MQTTALARM = 2
 MQTTDEBUG = 3
+MQTTSENSORS = 4
 
 ##############
 #MQTT Data Receiving
@@ -39,17 +42,52 @@ def on_WirelessMQTTClientmessage(client, userdata, message):
 
     MQTTJSON = json.loads(message.payload.decode("utf-8"))
 
-    if (MQTTJSON['messagetype'] == str(MQTTVALVECHANGE)):
+    if (str(MQTTJSON['messagetype']) == str(MQTTVALVECHANGE)):
         print("Valve Change Received")
         pclogging.writeMQTTValveChangeRecord(MQTTJSON)
 
-    if (MQTTJSON['messagetype'] == str(MQTTALARM)):
+    if (str(MQTTJSON['messagetype']) == str(MQTTALARM)):
         print("Alarm Message Received")
         pclogging.systemlog(config.CRITICAL,MQTTJSON['argument'])
 
-    if (MQTTJSON['messagetype'] == str(MQTTDEBUG)):
+    if (str(MQTTJSON['messagetype']) == str(MQTTDEBUG)):
         print("Debug Message Recieved")
-        pclogging.systemlog(config.DEBUG,MQTTJSON['argument'])
+        pclogging.systemlog(config.DEBUG,MQTTJSON['id']+", "+MQTTJSON['value'])
+
+    if (str(MQTTJSON['messagetype']) == str(MQTTSENSORS)):
+        print("Sensor Message Recieved")
+        processSensorMessage(MQTTJSON)
+
+
+
+
+
+def processSensorMessage(MQTTJSON):
+        if (config.SWDEBUG):
+            print("-----------------")
+            print("Processing MQTT Sensor Message")
+    
+        parseSensors = MQTTJSON["sensorValues"]
+        parseSensorsArray = parseSensors.split(",")
+        for i in range(0,4):
+            for singleSensor in state.moistureSensorStates:
+                
+                if (singleSensor["id"] == str(MQTTJSON["id"])):
+                    if (singleSensor["sensorNumber"] == str(i+1)):
+                       singleSensor["sensorValue"] = str(parseSensorsArray[i])
+                       currentTime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                       singleSensor["timestamp"] = currentTime
+        
+
+        if (config.SWDEBUG):
+            print("-----------------")
+            print("MoistureSensorStates")
+            print(state.moistureSensorStates)
+
+            print("-----------------")
+        for singleSensor in state.moistureSensorStates:
+                pclogging.sensorlog(singleSensor["id"], singleSensor["sensorNumber"], singleSensor["sensorValue"], singleSensor["sensorType"], singleSensor["timestamp"]) 
+
 
 
 ##############

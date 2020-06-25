@@ -27,9 +27,14 @@ def initMoistureSensors():
                 state.moistureSensorStates.append(element) 
             
             
+            myIP = singleWireless["ipaddress"]
+            myCommand = "enableMoistureSensors?params=admin,1,1,1,1"
+            returnJSON = AccessValves.sendCommandToWireless(myIP, myCommand)
+
+
 
 def readAllMoistureSensors():
-
+        # force read from wireless systems
 
         if (config.LOCKDEBUG):
             print("UpdateStateLock Acquire Attempt - readAllMoistureSensors ")

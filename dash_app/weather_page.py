@@ -179,8 +179,10 @@ def generateCurrerntWeatherJSON():
                 query = "SELECT id, TotalRain, TimeStamp FROM WeatherData WHERE DATE(TimeStamp) = CURDATE() ORDER by id ASC"
                 cur.execute(query)
                 rainspanrecords = cur.fetchall()
-
-                rainspan = rainspanrecords[len(rainspanrecords)-1][1] - rainspanrecords[0][1]
+                if (len(rainspanrecords) > 0):
+                    rainspan = rainspanrecords[len(rainspanrecords)-1][1] - rainspanrecords[0][1]
+                else:
+                    rainspan = 0
                 CWJSON["CalendarDayRain"] = rainspan
 
                 # Calendar Month 
@@ -188,7 +190,10 @@ def generateCurrerntWeatherJSON():
                 cur.execute(query)
                 rainspanrecords = cur.fetchall()
 
-                rainspan = rainspanrecords[len(rainspanrecords)-1][1] - rainspanrecords[0][1]
+                if (len(rainspanrecords) > 0):
+                    rainspan = rainspanrecords[len(rainspanrecords)-1][1] - rainspanrecords[0][1]
+                else:
+                    rainspan = 0
                 CWJSON["CalendarMonthRain"] = rainspan
                 
                 # last 30 days 
@@ -201,7 +206,10 @@ def generateCurrerntWeatherJSON():
                 cur.execute(query)
                 rainspanrecords = cur.fetchall()
 
-                rainspan = rainspanrecords[len(rainspanrecords)-1][1] - rainspanrecords[0][1]
+                if (len(rainspanrecords) > 0):
+                    rainspan = rainspanrecords[len(rainspanrecords)-1][1] - rainspanrecords[0][1]
+                else:
+                    rainspan = 0
                 CWJSON["30DayRain"] = rainspan
                 
                 
@@ -215,7 +223,10 @@ def generateCurrerntWeatherJSON():
                 cur.execute(query)
                 rainspanrecords = cur.fetchall()
 
-                rainspan = rainspanrecords[len(rainspanrecords)-1][1] - rainspanrecords[0][1]
+                if (len(rainspanrecords) > 0):
+                    rainspan = rainspanrecords[len(rainspanrecords)-1][1] - rainspanrecords[0][1]
+                else:
+                    rainspan = 0
                 CWJSON["24HourRain"] = rainspan
                 
                 
@@ -229,7 +240,10 @@ def generateCurrerntWeatherJSON():
                 cur.execute(query)
                 rainspanrecords = cur.fetchall()
 
-                rainspan = rainspanrecords[len(rainspanrecords)-1][1] - rainspanrecords[0][1]
+                if (len(rainspanrecords) > 0):
+                    rainspan = rainspanrecords[len(rainspanrecords)-1][1] - rainspanrecords[0][1]
+                else:
+                    rainspan = 0
                 CWJSON["7DaysRain"] = rainspan
                 
                 
