@@ -11,7 +11,7 @@ from __future__ import print_function
 from builtins import range
 from past.utils import old_div
 
-SGSVERSION = "008"
+SGSVERSION = "009"
 
 #imports 
 
@@ -226,7 +226,7 @@ def tick():
 
 
 def killLogger():
-    scheduler.shutdown()
+    state.scheduler.shutdown()
     print("Scheduler Shutdown....")
     exit()
 
@@ -278,12 +278,10 @@ def centerText(text,sizeofline):
         return mytext+text
 
 #############################
-# main program
+# initialize Smart Garden System
 #############################
 
-    # Main Program
-if __name__ == '__main__':
-    
+def initializeSGSPart1():
     print("###############################################")
     print("SGS2 Version "+SGSVERSION+"  - SwitchDoc Labs")
     print("###############################################")
@@ -293,6 +291,7 @@ if __name__ == '__main__':
     
     
     
+    # read in JSON
     # read in JSON
     readJSON.readJSON("")
     readJSON.readJSONSGSConfiguration("")
@@ -305,17 +304,15 @@ if __name__ == '__main__':
     else:
         pclogging.systemlog(config.INFO,"Garden Cam NOT Present")
         
-        
     # scan and check for resources
     # get if weather is being used
     config.Weather_Present = readJSON.getJSONValue("weather") 
 
-    
-    # this is the big exception clause that will turn all pumps off if there is a problem
-    try: 
 
-    
-    
+    pass
+
+def initializeSGSPart2():
+
         # status reports
     
         print("----------------------")
@@ -328,7 +325,7 @@ if __name__ == '__main__':
         #print(returnStatusLine("Ultrasonic Level Sensor",config.UltrasonicLevel_Present))
     
         print("----------------------")
-        print("Wireless SGS Devices")
+        print("Checking Wireless SGS Devices")
         print("----------------------")
     
         scanForResources.updateDeviceStatus(True)
@@ -400,15 +397,16 @@ if __name__ == '__main__':
             state.WeatherSTEMHash = SkyCamera.SkyWeatherKeyGeneration(config.STATIONKEY)
 
     
+def initializeScheduler():
+
+
     
-        scheduler = BackgroundScheduler()
     
     
-    
-        scheduler.add_listener(ap_my_listener, apscheduler.events.EVENT_JOB_ERROR)	
+        state.scheduler.add_listener(ap_my_listener, apscheduler.events.EVENT_JOB_ERROR)	
     
         # prints out the date and time to console
-        scheduler.add_job(tick, 'interval', seconds=5*60)
+        state.scheduler.add_job(tick, 'interval', seconds=5*60)
         
         # read wireless sensor package
         print("Before Adding readSensors Job")
@@ -417,54 +415,54 @@ if __name__ == '__main__':
 	     # start in 10 seconds
              starttime = datetime.datetime.now() + datetime.timedelta(seconds=30)
     
-             wsjob = scheduler.add_job(weatherSensors.readSensors,run_date=starttime) # run in background
+             wsjob = state.scheduler.add_job(weatherSensors.readSensors,run_date=starttime) # run in background
              #weatherSensors.readSensors()
 
-             #scheduler.add_job(weatherSensors.writeWeatherRecord, 'interval', seconds=15*60)
-             scheduler.add_job(weatherSensors.writeWeatherRecord, 'interval', seconds=1*60)
+             state.scheduler.add_job(weatherSensors.writeWeatherRecord, 'interval', seconds=15*60)
+             #state.state.scheduler.add_job(weatherSensors.writeWeatherRecord, 'interval', seconds=1*60)
         
         if (config.BMP280_Present):
              wiredSensors.readWiredSensors(bmp280)
-             scheduler.add_job(wiredSensors.readWiredSensors, 'interval', args=[bmp280 ], seconds = 500) 	
+             state.scheduler.add_job(wiredSensors.readWiredSensors, 'interval', args=[bmp280 ], seconds = 500) 	
     
         # blink optional life light
-        scheduler.add_job(blinkLED, 'interval', seconds=5, args=[0,Color(0,0,255),1,0.250])
+        state.scheduler.add_job(blinkLED, 'interval', seconds=5, args=[0,Color(0,0,255),1,0.250])
         
         # blink life light
-        scheduler.add_job(pixelDriver.statusLEDs, 'interval', seconds=15, args=[strip, PixelLock])
+        state.scheduler.add_job(pixelDriver.statusLEDs, 'interval', seconds=15, args=[strip, PixelLock])
     
     
     
         # check device state
-        scheduler.add_job(scanForResources.updateDeviceStatus, 'interval', seconds=6*120, args=[False])
+        state.scheduler.add_job(scanForResources.updateDeviceStatus, 'interval', seconds=6*120, args=[False])
+        #state.scheduler.add_job(scanForResources.updateDeviceStatus, 'interval', seconds=60, args=[False])
     
     
    
         # sky camera
         if (config.USEWEATHERSTEM):
             if (config.GardenCam_Present):
-                scheduler.add_job(SkyCamera.takeSkyPicture, 'interval', seconds=int(config.INTERVAL_CAM_PICS__SECONDS))
+                state.scheduler.add_job(SkyCamera.takeSkyPicture, 'interval', seconds=int(config.INTERVAL_CAM_PICS__SECONDS))
 
      # check for force water - note the interval difference with updateState
-        #scheduler.add_job(forceWaterPlantCheck, 'interval', seconds=8)
+        #state.scheduler.add_job(forceWaterPlantCheck, 'interval', seconds=8)
         
     
         # check for alarms
-        scheduler.add_job(checkForAlarms, 'interval', seconds=15)
-        #scheduler.add_job(checkForAlarms, 'interval', seconds=300)
+        state.scheduler.add_job(checkForAlarms, 'interval', seconds=15)
+        #state.scheduler.add_job(checkForAlarms, 'interval', seconds=300)
     
     
         #if (config.USEBLYNK):
-        #scheduler.add_job(updateBlynk.blynkStateUpdate, 'interval', seconds=60)
+        #state.scheduler.add_job(updateBlynk.blynkStateUpdate, 'interval', seconds=60)
     
         # MS sensor Read 
-    
-        AccessMS.initMoistureSensors()
+        AccessMS.initMoistureSensors() 
         AccessMS.readAllMoistureSensors()
         
-        # MQTT updates the Moisture Sensor arrays 
+        # MQTT now updates the Moisture Sensor arrays 
 
-        #scheduler.add_job(AccessMS.readAllMoistureSensors, 'interval', minutes=15)
+        #state.scheduler.add_job(AccessMS.readAllMoistureSensors, 'interval', minutes=15)
     
         # sensor timed water and Timed
         tNow  = datetime.datetime.now()
@@ -472,10 +470,10 @@ if __name__ == '__main__':
         tNow -= datetime.timedelta(minutes = tNow.minute, seconds = tNow.second, microseconds =  tNow.microsecond)
         state.nextMoistureSensorActivate = tNow
         
-        scheduler.add_job(Valves.valveCheck, 'interval', minutes=1)
+        state.scheduler.add_job(Valves.valveCheck, 'interval', minutes=1)
     
         # sensor manual water
-        scheduler.add_job(Valves.manualCheck, 'interval', seconds=15)
+        state.scheduler.add_job(Valves.manualCheck, 'interval', seconds=15)
     
     
     	
@@ -484,15 +482,10 @@ if __name__ == '__main__':
             updateBlynk.blynkInit()
     	
     	
-        # start scheduler
-        scheduler.start()
-        print("-----------------")
-        print("Scheduled Jobs") 
-        print("-----------------")
-        scheduler.print_jobs()
-        print("-----------------")
         
         
+def initializeSGSPart3():
+
         if (config.SWDEBUG):
             if (config.USEBLYNK):
                 print("Blynk Status=", updateBlynk.blynkSGSAppOnline())
@@ -536,6 +529,73 @@ if __name__ == '__main__':
     
         checkAndWater()
         checkForAlarms()
+
+
+def pauseScheduler():
+
+    state.scheduler.print_jobs()
+
+    jobs = state.scheduler.get_jobs()
+    print("get_jobs=", jobs)
+    state.scheduler.print_jobs()
+    for job in jobs:
+        state.scheduler.remove_job(job.id)
+        
+    jobs = state.scheduler.get_jobs()
+    print("After get_jobs=", jobs)
+    state.scheduler.pause()
+    print("After get_jobs=", jobs)
+    state.scheduler.print_jobs()
+    pass
+
+
+def restartSGS():
+    state.WirelessMQTTClient.disconnect()
+    state.WirelessMQTTClient.loop_stop()
+    pauseScheduler()
+ 
+
+    initializeSGSPart1()
+    initializeSGSPart2() 
+    
+    initializeScheduler()       
+    state.scheduler.resume()
+    print("After resume=" )
+    state.scheduler.print_jobs()
+
+    initializeSGSPart3()
+
+
+    pass
+#############################
+# main program
+#############################
+
+    # Main Program
+if __name__ == '__main__':
+        
+
+    initializeSGSPart1()
+    
+    # this is the big exception clause that will turn all pumps off if there is a problem
+    try: 
+
+        initializeSGSPart2() 
+        state.scheduler = BackgroundScheduler()
+    
+        initializeScheduler()       
+
+        # start state.scheduler
+        state.scheduler.start()
+        print("-----------------")
+        print("Scheduled Jobs") 
+        print("-----------------")
+        state.scheduler.print_jobs()
+        print("-----------------")
+
+
+        initializeSGSPart3()
+        
         #############
         #  Main Loop
         #############
@@ -543,6 +603,20 @@ if __name__ == '__main__':
     
     
         while True:
+           # check for new JSON files
+           if (os.path.exists('NEWJSON') == True):
+                # remove file
+                print("-----------------------")
+                print("New JSON files detected")
+                print("SGS2 reloading JSON configuration")
+                print("-----------------------")
+                os.remove('NEWJSON')
+                restartSGS()
+                pclogging.systemlog(config.INFO,"Reloading SGS with New JSON")
+           else:
+                #print("No New JSON Files Detected")
+                pass
+
            time.sleep(10.0)
     		
     

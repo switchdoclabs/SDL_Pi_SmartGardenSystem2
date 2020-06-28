@@ -32,6 +32,12 @@ MQTTALARM = 2
 MQTTDEBUG = 3
 MQTTSENSORS = 4
 
+#############
+# MQTT Publish Message Type
+#############
+MQTTPUBVALVESET = 10
+
+
 ##############
 #MQTT Data Receiving
 ##############
@@ -52,7 +58,8 @@ def on_WirelessMQTTClientmessage(client, userdata, message):
 
     if (str(MQTTJSON['messagetype']) == str(MQTTDEBUG)):
         print("Debug Message Recieved")
-        pclogging.systemlog(config.DEBUG,MQTTJSON['id']+", "+MQTTJSON['value'])
+        temp = str(MQTTJSON['id'])+", "+str(MQTTJSON['value'])
+        pclogging.systemlog(config.DEBUG,temp)
 
     if (str(MQTTJSON['messagetype']) == str(MQTTSENSORS)):
         print("Sensor Message Recieved")
@@ -117,4 +124,24 @@ def startWirelessMQTTClient():
     state.WirelessMQTTClient.connect(broker_address, port=port)          #connect to broker
     
     state.WirelessMQTTClient.loop_start()        #start the loop
+
+#############
+# MQTT Publish
+#############
+
+def sendMQTTValve(myID, Valve, State, TimeOn):
+
+    myMessage = {
+                    "id" : str(myID),
+                    "messagetype" : str(MQTTPUBVALVESET),
+                    "timestamp" : datetime.datetime.now().strftime( '%Y-%m-%d %H:%M:%S'),
+                    "valve" : Valve,
+                    "state" : State,
+                    "timeon" : TimeOn
+                    
+
+
+                }
+    myMessageJSON = json.dumps(myMessage)
+    state.WirelessMQTTClient.publish("SGS/"+str(myID)+"/Valves",myMessageJSON )
 

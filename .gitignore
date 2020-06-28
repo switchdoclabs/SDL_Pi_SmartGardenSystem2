@@ -11,3 +11,4 @@ nohup.out
 conflocal.py
 __pycache__
 *.JSON
+imagedisplay*

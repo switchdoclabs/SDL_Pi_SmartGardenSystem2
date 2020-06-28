@@ -115,7 +115,7 @@ def valveCheck():
     while (state.nextMoistureSensorActivate < myNow):
         state.nextMoistureSensorActivate = state.nextMoistureSensorActivate + datetime.timedelta( minutes=15)
         if (config.SWDEBUG):
-            print("nextMoistureSensorActivate = ", state.nextMoistureSensorActivate)
+            print("nextMoistureValveSensorCheck = ", state.nextMoistureSensorActivate)
 
     
     if (config.LOCKDEBUG):

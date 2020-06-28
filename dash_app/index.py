@@ -20,6 +20,7 @@ import valve_graphs
 import log_page
 import weather_page
 import p_v_programming
+import valves_scheduled
 
 from non_impl import NotImplPage 
 
@@ -111,6 +112,9 @@ def display_page(pathname):
         myLayout2 = ""
     if pathname == '/p_v_programming':
         myLayout = p_v_programming.PVProgrammingPage()
+        myLayout2 = ""
+    if pathname == '/valves_scheduled':
+        myLayout = valves_scheduled.ValvesScheduledPage()
         myLayout2 = ""
     
     #print("myLayout= ",myLayout)
@@ -447,6 +451,58 @@ def updateWeatherGraphPage(n_intervals,id, value):
            fig = weather_page.buildOutdoorTemperature_Humidity_Graph_Figure()
        if (id['index'] ==  'graph-suv'):
            fig = weather_page.buildSunlightUVIndexGraphFigure()
+
+    else:
+        raise PreventUpdate
+    return [fig]
+
+# p_v_programming
+
+
+
+
+@app.callback(
+	      [
+	      Output({'type' : 'PVPdynamic', 'index' : "pvprogramming"}, 'figure' ),
+              ],
+              [Input('main-interval-component','n_intervals'),
+              Input({'type' : 'PVPdynamic', 'index' : "pvprogramming"}, 'id' )],
+              [State({'type' : 'PVPdynamic', 'index' : "pvprogramming"}, 'value'  )]
+              )
+
+def updatePVProgramming(n_intervals,id, value):
+
+    if (n_intervals == 0): # stop first update
+        raise PreventUpdate
+
+    #if (True): # 5 minutes -10 second timer
+    if ((n_intervals % (5*6)) == 0): # 15 minutes -10 second timer
+        data = p_v_programming.fetchProgramming()
+        fig = p_v_programming.buildTableFig(data, "Pump and Valve Programming")
+
+    else:
+        raise PreventUpdate
+    return [fig]
+
+# valves_scheduled
+@app.callback(
+	      [
+	      Output({'type' : 'VSdynamic', 'index' : "nextevents"}, 'figure' ),
+              ],
+              [Input('main-interval-component','n_intervals'),
+              Input({'type' : 'VSdynamic', 'index' : "nextevents"}, 'id' )],
+              [State({'type' : 'VSdynamic', 'index' : "nextevents"}, 'value'  )]
+              )
+
+def updatePVProgramming(n_intervals,id, value):
+
+    if (n_intervals == 0): # stop first update
+        raise PreventUpdate
+
+    #if (True): # 5 minutes -10 second timer
+    if ((n_intervals % (5*6)) == 0): # 15 minutes -10 second timer
+        data = valves_scheduled.fetchProgramming()
+        fig = valves_scheduled.buildTableFig(data, "Next Scheduled Events")
 
     else:
         raise PreventUpdate

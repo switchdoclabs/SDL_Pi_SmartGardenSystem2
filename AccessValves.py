@@ -2,6 +2,7 @@ import requests
 import readJSON
 import state
 import config
+import MQTTFunctions
 
 def sendCommandToWireless(myIP, myCommand):
         myURL = 'http://'+str(myIP)+'/'+myCommand
@@ -26,13 +27,15 @@ def turnOnTimedValve(singleValve):
         # wireless ID
         
         wirelessJSON = readJSON.getJSONValue("WirelessDeviceJSON")
+        '''
         for singlewireless in wirelessJSON:
             if (str(singleValve["id"]).replace(" ","") == str(singlewireless["id"]).replace(" ","")):
                     myIP = singlewireless["ipaddress"]
 
         myCommand = "setSingleValve?params=admin,"+str(singleValve["ValveNumber"])+",1,"+str(singleValve["OnTimeInSeconds"])
         sendCommandToWireless(myIP, myCommand)
-
+        '''
+        MQTTFunctions.sendMQTTValve(str(singleValve["id"]), str(singleValve["ValveNumber"]), 1, str(singleValve["OnTimeInSeconds"]))
 
 def turnOffAllValves():
 

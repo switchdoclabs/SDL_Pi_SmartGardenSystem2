@@ -27,9 +27,9 @@ def initMoistureSensors():
                 state.moistureSensorStates.append(element) 
             
             
-            myIP = singleWireless["ipaddress"]
-            myCommand = "enableMoistureSensors?params=admin,1,1,1,1"
-            returnJSON = AccessValves.sendCommandToWireless(myIP, myCommand)
+#            myIP = singleWireless["ipaddress"]
+#            myCommand = "enableMoistureSensors?params=admin,1,1,1,1"
+#            returnJSON = AccessValves.sendCommandToWireless(myIP, myCommand)
 
 
 

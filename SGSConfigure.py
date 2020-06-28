@@ -161,14 +161,14 @@ class SGSConfigure(App):
             print ("SGSConfiguration.JSON File exists")
             with open('SGSConfiguration.JSON') as json_file:
                 JSONData = json.load(json_file)
-                print("JSONData from SGSConfigFile=", JSONData)
+                #print("JSONData from SGSConfigFile=", JSONData)
                 self.SGSConfigurationJSON  = JSONData 
         else:
             print ("SGSConfiguration.JSON File does not exist")
             self.SGSConfigurationJSON = {"SGSConfigVersion": "001",
                                         "Valves":  [] 
                                         }
-            print("Default JSONData for SGSConfigFile=", self.SGSConfigurationJSON)
+            #print("Default JSONData for SGSConfigFile=", self.SGSConfigurationJSON)
             #self.setDefaults()
 
         
@@ -182,10 +182,10 @@ class SGSConfigure(App):
                 self.JSONData = json.load(json_file)
 
 
-                print("JSONData from File=", self.JSONData)
+                #print("JSONData from File=", self.JSONData)
                 self.SWDEBUG = self.getJSONValue('SWDEBUG')
                 self.enable_MySQL_Logging = self.getJSONValue('enable_MySQL_Logging')
-                print("enable_mySQL_Logging=", self.enable_MySQL_Logging)
+                #print("enable_mySQL_Logging=", self.enable_MySQL_Logging)
                 self.English_Metric = self.getJSONValue('English_Metric')
                 self.MySQL_Password = self.getJSONValue('MySQL_Password')
                 self.mailUser = self.getJSONValue('mailUser')
@@ -227,7 +227,7 @@ class SGSConfigure(App):
     def saveSGSConfigurationJSON(self):
 
         data = self.SGSConfigurationJSON
-        print(data)
+        #print(data)
 
         #json_data = json.dumps(data)        
         
@@ -291,7 +291,7 @@ class SGSConfigure(App):
         data['pixelPin'] = self.F_pixelPin.get_value()
 
 
-        print(data)
+        #print(data)
 
         json_data = json.dumps(data)        
         # strip double or triple \\
@@ -477,10 +477,10 @@ class SGSConfigure(App):
 
     def checkValveJSON(self, myID, valveNumber):
         myJSON=self.SGSConfigurationJSON
-        print("myJSON=", self.SGSConfigurationJSON) 
+        #print("myJSON=", self.SGSConfigurationJSON) 
         #myLoadedJSON = json.loads(str(myJSON).replace("'","\"" ))
         myLoadedJSON = myJSON
-        print("myValves=",myLoadedJSON["Valves"])
+        #print("myValves=",myLoadedJSON["Valves"])
         myValves = myLoadedJSON["Valves"]
 
         Present = False
@@ -591,8 +591,8 @@ class SGSConfigure(App):
 
         
     def buildMissingValves(self, DeviceID, name ):
-        print("DeviceID=", DeviceID)
-        print("name=", name)
+        #print("DeviceID=", DeviceID)
+        #print("name=", name)
         
         if (len(str(DeviceID).replace(" ","")) < 4):
             for i in range(1,5):
@@ -796,7 +796,7 @@ class SGSConfigure(App):
                 myList.append(str(myName))
                 currentValve = self.fetchValveJSON(myID, i)
                 if len(currentValve) > 0:
-                    print ('currentValve=', currentValve)
+                    #print ('currentValve=', currentValve)
 
                     myList.append(str(currentValve["ValveNumber"]))
                     myList.append(str(currentValve["Control"]))
@@ -810,7 +810,7 @@ class SGSConfigure(App):
 
     
         # set up table display
-        print('myArray=', myArray) 
+        #print('myArray=', myArray) 
 
         self.table = gui.Table.new_from_list(myArray,
                                     width=600, height=400, margin='10px')
@@ -906,13 +906,15 @@ class SGSConfigure(App):
                 if (str(id) == str(myID)):
                     # we have the record
                     wireless["name"] = value
+
+                    # now write it out to the unit
+                    scanForResources.sendNewNameToUnit(wireless["ipaddress"], value)
                 newWireless.append(wireless)
             self.WirelessDeviceJSON = newWireless
              
         self.removeAllScreens()
         self.screen06 = self.buildScreen06()
         self.mainContainer.append(self.screen06,'screen06')
-
 
 
     def buildScreen1(self):
@@ -1380,7 +1382,9 @@ class SGSConfigure(App):
         cancel.onclick.do(self.onCancel)
         save = gui.Button('Save',style='position:absolute; left:400px; height: 30px; width:100px;  margin: 10px;  top:5px')
         save.onclick.do(self.onSave)
-        exit = gui.Button('Save and Exit',style='position:absolute; left:475px; height: 30px; width:100px;  margin: 10px;  top:95px')
+        saveandreload = gui.Button('Save and Reload SGS',style='position:absolute; left:675px; height: 30px; width:100px;  margin: 10px;  top:5px')
+        saveandreload.onclick.do(self.onSaveAndReloadSGS)
+        exit = gui.Button('Save and Exit',style='position:absolute; left:400px; height: 30px; width:100px;  margin: 10px;  top:95px')
         exit.onclick.do(self.onExit)
         reset = gui.Button('Reset to Defaults',style='position:absolute; left:400px;height: 30px;   width:250px; margin: 10px; top:50px')
         reset.onclick.do(self.onReset)
@@ -1389,6 +1393,7 @@ class SGSConfigure(App):
         self.mainContainer.append(header)
         self.mainContainer.append(cancel)
         self.mainContainer.append(save)
+        self.mainContainer.append(saveandreload)
         self.mainContainer.append(exit)
         self.mainContainer.append(reset)
 
@@ -1444,6 +1449,7 @@ class SGSConfigure(App):
 
     def menu_screen0_clicked(self, widget):
         self.removeAllScreens()
+        self.screen0 = self.buildScreen0()
         self.mainContainer.append(self.screen0,'screen0')
         print("menu screen0 clicked")  
 
@@ -1630,6 +1636,17 @@ class SGSConfigure(App):
         self.saveJSON()
         self.saveSGSConfigurationJSON()
 
+        
+    def onSaveAndReloadSGS(self, widget, name='', surname=''):
+        print("onSave and Reload SGS clicked")
+        self.saveJSON()
+        self.saveSGSConfigurationJSON()
+        fname = 'NEWJSON'
+        with open(fname, 'a'):
+            try:                     # Whatever if file was already existing
+                os.utime(fname, None)  # => Set current time anyway
+            except OSError:
+                pass  # File deleted between open() and os.utime() call
 
 #Configuration
 configuration = {'config_enable_file_cache': True, 'config_multiple_instance': True, 'config_port': 8001, 'config_address': '0.0.0.0', 'config_start_browser': False, 'config_project_name': 'SGS Configuration', 'config_resourcepath': './res/'}

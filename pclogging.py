@@ -40,7 +40,7 @@ def systemlog(level,  message):
                 cur = con.cursor()
                 #print "before query"
                 query = "INSERT INTO SystemLog(TimeStamp, Level, SystemText ) VALUES(LOCALTIMESTAMP(), %i, '%s')" % (level, message)
-                print("query=%s" % query)
+                #print("query=%s" % query)
                 cur.execute(query)
                 con.commit()
 
@@ -160,7 +160,7 @@ def writeWeatherRecord():
                 fields = "OutdoorTemperature, OutdoorHumidity, IndoorTemperature, IndoorHumidity, TotalRain, SunlightVisible, SunlightUVIndex, WindSpeed, WindGust, WindDirection,BarometricPressure, BarometricPressureSeaLevel, BarometricTemperature, AQI"
                 values = "%6.2f, %6.2f, %6.2f, %6.2f, %6.2f, %6.2f, %6.2f, %6.2f, %6.2f, %6.2f,%6.2f,%6.2f,%6.2f,%6.2f" % (state.OutdoorTemperature, state.OutdoorHumidity, state.IndoorTemperature, state.IndoorHumidity, state.TotalRain, state.SunlightVisible, state.SunlightUVIndex, state.WindSpeed, state.WindGust, state.WindDirection,state.BarometricPressure, state.BarometricPressureSeaLevel, state.BarometricTemperature, state.AQI)
                 query = "INSERT INTO WeatherData (%s) VALUES(%s )" % (fields, values)
-                print("query=", query)
+                #print("query=", query)
                 cur.execute(query)
                 con.commit()
         except mdb.Error as e:

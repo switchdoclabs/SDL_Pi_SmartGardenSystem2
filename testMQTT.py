@@ -81,11 +81,16 @@ for single in wirelessJSON:
     print("subscribing to ", topic)
     client.subscribe(topic)
 
+    topic = "SGS/" + single["id"]+"/Valves"
+    print("subscribing to ", topic)
+    client.subscribe(topic)
+
 try:
     while True:
-        time.sleep(1)
-        #client.publish("SGS/5051", "Test")
-
+        time.sleep(15)
+        #client.publish("SGS/5051/Valves", "Test")
+        payload = '{"id": "5051", "messagetype": "10", "timestamp": "2020-06-27 15:30:28", "valve": "1", "state": 1, "timeon": "10"}'
+        client.publish("SGS/5051/Valves", payload)
 
 except KeyboardInterrupt:
     print("exiting")

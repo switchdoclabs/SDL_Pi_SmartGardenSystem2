@@ -18,6 +18,26 @@ import socket
 import pclogging
 
 
+def sendCommandToWireless(myIP, myCommand):
+        myURL = 'http://'+str(myIP)+'/'+myCommand
+        
+        try:
+                if (config.SWDEBUG):
+                    print("myURL=", myURL)
+                req = requests.get(myURL,timeout=5)
+                    
+                returnJSON = req.json()
+
+        except Exception:
+                #traceback.print_exc()
+                return {} 
+        return returnJSON 
+
+def sendNewNameToUnit(ipaddress, newName):
+
+    myCommand = "setStationName?params=admin,"+newName
+    sendCommandToWireless(ipaddress, myCommand)
+
 def checkDeviceStatus(id):
 
     wirelessJSON = readJSON.getJSONValue("WirelessDeviceJSON")
@@ -32,7 +52,7 @@ def checkDeviceStatus(id):
 
                 return True
             else:
-                pclogging.systemlog(config.INFO,"Wireless Device ID %s Inactive" %(myID))
+                #pclogging.systemlog(config.INFO,"Wireless Device ID %s Inactive" %(myID))
                 return False
 
     return False 
@@ -128,8 +148,7 @@ def checkForDeviceFromIP(ip):
 def updateDeviceStatus(Log):
 
 
-    state.deviceStatus = {} 
-    
+    #state.deviceStatus = {} 
     wirelessJSON = readJSON.getJSONValue("WirelessDeviceJSON")
     for single in wirelessJSON:
         myID = str(single["id"])
@@ -138,6 +157,7 @@ def updateDeviceStatus(Log):
                 if (state.deviceStatus[str(single['id'])] == False):
                      pclogging.systemlog(config.INFO,"Wireless Device ID %s Reactivated" %(myID))
             except:
+                #traceback.print_exc()
                 pass
             if (Log): 
                 pclogging.systemlog(config.INFO,"Wireless Device ID %s Active" %(myID))
@@ -148,10 +168,12 @@ def updateDeviceStatus(Log):
                 if (state.deviceStatus[str(single['id'])] == True):
                     pclogging.systemlog(config.INFO,"Wireless Device ID %s has gone Inactive" %(myID))
             except:
+                #traceback.print_exc()
                 pass
             state.deviceStatus[str(single["id"])] =   False
             if (Log): 
                 pclogging.systemlog(config.INFO,"Wireless Device ID %s is Inactive" %(myID))
+            state.deviceStatus[str(single["id"])] =   False
 
 
 def getNameForID(myID):

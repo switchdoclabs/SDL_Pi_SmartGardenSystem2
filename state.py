@@ -35,7 +35,6 @@ for i in range(1, config.moisture_sensor_count+1):
     Moisture_Humidity_Array.append(100.0)
 
 #water below this limit
-
 Moisture_Threshold = 60.0   
 ##################
 # Pump State
@@ -77,6 +76,8 @@ Is_Alarm_WaterEmpty = False
 # Internal States
 ##################
 
+# apscheduler scheduler
+scheduler = None
 
 # run rainbow simulation on LEDs
 
@@ -102,6 +103,8 @@ UpdateStateLock = None
 ######################
 # extenders and device status
 ######################
+
+deviceStatus = {}
 
 valveStatus = []
 
