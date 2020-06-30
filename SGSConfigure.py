@@ -746,6 +746,14 @@ class SGSConfigure(App):
             self.DisplayST_TB.set_text(valveJSON["StartTime"])
             self.DisplayOTS_TB.set_text(valveJSON["OnTimeInSeconds"])
             self.DisplaySG_CB.set_value(valveJSON["ShowGraph"])
+            if (valveJSON["Control"]  == 'Timed'):
+                print('enabled')
+                self.DisplayST_TB.set_enabled(True)
+                self.dropDownTimed.set_enabled(True)
+            else:
+                print('disabled')
+                self.DisplayST_TB.set_enabled(False)
+                self.dropDownTimed.set_enabled(False)
        
 
 
@@ -1375,7 +1383,7 @@ class SGSConfigure(App):
 
 
         logo = SuperImage("./static/SGfulllogocolor.png", width=400, height =142)
-        header = gui.Label("Smart Garden System Configuration Tool V001", style='position:absolute; left:150px; top:120px')
+        header = gui.Label("Smart Garden System Configuration Tool V003", style='position:absolute; left:150px; top:120px')
         # bottom buttons
 
         cancel = gui.Button('Cancel',style='position:absolute; left:550px; height: 30px; width:100px; margin:10px; top:5px')
@@ -1384,7 +1392,7 @@ class SGSConfigure(App):
         save.onclick.do(self.onSave)
         saveandreload = gui.Button('Save and Reload SGS',style='position:absolute; left:675px; height: 30px; width:100px;  margin: 10px;  top:5px')
         saveandreload.onclick.do(self.onSaveAndReloadSGS)
-        exit = gui.Button('Save and Exit',style='position:absolute; left:400px; height: 30px; width:100px;  margin: 10px;  top:95px')
+        exit = gui.Button('Save and Exit',style='position:absolute; left:500px; height: 30px; width:100px;  margin: 10px;  top:95px')
         exit.onclick.do(self.onExit)
         reset = gui.Button('Reset to Defaults',style='position:absolute; left:400px;height: 30px;   width:250px; margin: 10px; top:50px')
         reset.onclick.do(self.onReset)

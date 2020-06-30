@@ -152,7 +152,12 @@ def updateDeviceStatus(Log):
     wirelessJSON = readJSON.getJSONValue("WirelessDeviceJSON")
     for single in wirelessJSON:
         myID = str(single["id"])
-        if (checkDeviceStatus(single["id"])):
+        deviceResult = checkDeviceStatus(single["id"])
+        if (deviceResult == False):   # check again if false
+            deviceResult = checkDeviceStatus(single["id"])
+
+
+        if (deviceResult):
             try:
                 if (state.deviceStatus[str(single['id'])] == False):
                      pclogging.systemlog(config.INFO,"Wireless Device ID %s Reactivated" %(myID))

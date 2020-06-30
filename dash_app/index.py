@@ -29,10 +29,9 @@ logo = Logo()
 print("new navbar=")
 nav = Navbar()
 
-#nav = html.Div([dcc.Link('Weather Page', href='/weather_page'),
-#    html.Br(),
-#    dcc.Link('status page', href='/status_page'), 
-#    ])
+SGSDASHSOFTWAREVERSION = "004"
+
+
 
 newValveState = ""
 # state of previous page
@@ -511,4 +510,5 @@ def updatePVProgramming(n_intervals,id, value):
 ##########################
 
 if __name__ == '__main__':
-    app.run_server(debug=True, host='0.0.0.0')
+    #app.run_server(debug=True, host='0.0.0.0')
+    app.run_server(host='0.0.0.0')
