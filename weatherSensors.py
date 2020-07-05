@@ -17,6 +17,7 @@ import buildJSON
 
 import state
 import pclogging
+import indoorTH
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 cmd = [ '/usr/local/bin/rtl_433', '-q', '-F', 'json', '-R', '146', '-R', '147']
@@ -146,12 +147,36 @@ def processF007THData(sLine):
     state.IndoorHumidity = var["humidity"]
     state.lastIndoorReading = var["time"]
     state.insideID = var["channel"]
-
+    
+    indoorTH.addITReading(var["device"], var["channel"], state.IndoorTemperature, var["humidity"], var["battery"],  var["time"])
+    
     state.currentStateJSON = buildJSON.getStateJSON()
     #if (config.SWDEBUG):
     #    print("currentJSON = ", state.currentStateJSON)
     state.buildJSONSemaphore.release()
     print("buildJSONSemaphore released")
+
+# write out SQL Inside TH Monitors
+
+def writeITWeatherRecord():
+
+    print("writeITWeatherRecord looking for buildJSONSemaphore acquire")
+    state.buildJSONSemaphore.acquire()
+    print("writeITWeatherRecord buildJSONSemaphore acquired")
+
+    print(state.lastMainReading)
+
+    if (state.lastIndoorReading != "Never"):
+        print("before ITwriteWeatherRecord")
+        pclogging.writeITWeatherRecord()
+    else:
+        if (config.SWDEBUG):
+            print("IT Weather Reading Not Recieved Yet")
+    state.buildJSONSemaphore.release()
+    print("writeITWeatherRecord buildJSONSemaphore released")
+
+
+
 
 # write out SQL record
 

@@ -212,7 +212,9 @@ pastBarometricReading = 0
 AQI = 0.0
 Hour24_AQI = 0.0
 
+# Indoor Temperature Sensor Array
 
+IndoorTH = []
 
 
 # status Values

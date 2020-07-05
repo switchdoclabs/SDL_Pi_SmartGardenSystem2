@@ -12,6 +12,7 @@ from __future__ import print_function
 
 import sys
 import time
+import datetime
 # Check for user imports
 import config
 
@@ -154,11 +155,34 @@ def writeWeatherRecord():
 	# commit
 	# close
         try:
+
+                # first calculate the 24 hour moving average for AQI
+                
                 print("trying database")
                 con = mdb.connect('localhost', 'root', config.MySQL_Password, 'SmartGardenSystem');
                 cur = con.cursor()
-                fields = "OutdoorTemperature, OutdoorHumidity, IndoorTemperature, IndoorHumidity, TotalRain, SunlightVisible, SunlightUVIndex, WindSpeed, WindGust, WindDirection,BarometricPressure, BarometricPressureSeaLevel, BarometricTemperature, AQI"
-                values = "%6.2f, %6.2f, %6.2f, %6.2f, %6.2f, %6.2f, %6.2f, %6.2f, %6.2f, %6.2f,%6.2f,%6.2f,%6.2f,%6.2f" % (state.OutdoorTemperature, state.OutdoorHumidity, state.IndoorTemperature, state.IndoorHumidity, state.TotalRain, state.SunlightVisible, state.SunlightUVIndex, state.WindSpeed, state.WindGust, state.WindDirection,state.BarometricPressure, state.BarometricPressureSeaLevel, state.BarometricTemperature, state.AQI)
+
+                timeDelta = datetime.timedelta(days=1)
+                now = datetime.datetime.now()
+                before = now - timeDelta
+                before = before.strftime('%Y-%m-%d %H:%M:%S')
+                query = "SELECT id, AQI, TimeStamp FROM WeatherData WHERE (TimeStamp > '%s') ORDER BY TimeStamp " % (before)
+
+                cur.execute(query)
+                myAQIRecords = cur.fetchall()
+                myAQITotal = 0.0
+                #print("AQIRecords=",myAQIRecords)
+                if (len(myAQIRecords) > 0):
+                    for i in range(0, len(myAQIRecords)):
+
+                        myAQITotal = myAQITotal + myAQIRecords[i][1] 
+                    myAQI24 = (myAQITotal+state.AQI)/(len(myAQIRecords)+1)
+                else:
+                    myAQI24  = 0.0
+                state.Hour24_AQI = myAQI24 
+
+                fields = "OutdoorTemperature, OutdoorHumidity, IndoorTemperature, IndoorHumidity, TotalRain, SunlightVisible, SunlightUVIndex, WindSpeed, WindGust, WindDirection,BarometricPressure, BarometricPressureSeaLevel, BarometricTemperature, AQI, AQI24Average"
+                values = "%6.2f, %6.2f, %6.2f, %6.2f, %6.2f, %6.2f, %6.2f, %6.2f, %6.2f, %6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f" % (state.OutdoorTemperature, state.OutdoorHumidity, state.IndoorTemperature, state.IndoorHumidity, state.TotalRain, state.SunlightVisible, state.SunlightUVIndex, state.WindSpeed, state.WindGust, state.WindDirection,state.BarometricPressure, state.BarometricPressureSeaLevel, state.BarometricTemperature, state.AQI, state.Hour24_AQI)
                 query = "INSERT INTO WeatherData (%s) VALUES(%s )" % (fields, values)
                 #print("query=", query)
                 cur.execute(query)
@@ -177,4 +201,38 @@ def writeWeatherRecord():
                 del con
 
 
+
+def writeITWeatherRecord():
+
+ if (config.enable_MySQL_Logging == True):	
+	# open mysql database
+	# write log
+	# commit
+	# close
+        try:
+
+
+                fields = "DeviceID, ChannelID, Temperature, Humdity, BatteryOK, TimeRead"
+                if (len(state.IndoorTH)> 0): 
+
+                    for singleChannel in state.IndoorTH:
+                        values = "%d, %d, %6.2f, %6.2f, %s, %s" % (singleChannel["deviceID"], singleChannel["channelID"], singleChannel["temperature"], singleChannel["humidity"], singleChannel["batteryOK"], singleChannel["time"])
+                        query = "INSERT INTO IndoorTHSensors (%s) VALUES(%s )" % (fields, values)
+                        print("query=", query)
+                        cur.execute(query)
+                        con.commit()
+                else:
+                    return
+        except mdb.Error as e:
+                traceback.print_exc()
+                print("Error %d: %s" % (e.args[0],e.args[1]))
+                con.rollback()
+                #sys.exit(1)
+
+        finally:
+                cur.close()
+                con.close()
+
+                del cur
+                del con
 

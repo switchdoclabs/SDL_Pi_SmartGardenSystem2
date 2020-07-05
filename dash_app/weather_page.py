@@ -148,7 +148,7 @@ def WUnits():
 
 
 
-def generateCurrerntWeatherJSON():
+def generateCurrentWeatherJSON():
     
         try:
                 #print("trying database")
@@ -172,7 +172,6 @@ def generateCurrerntWeatherJSON():
                         CWJSON[names[i][0]] = float(records[0][i])
                 CWJSON["StringTime"] = records[0][1].strftime("%d-%b-%Y %H:%M:%S") 
                 CWJSON["StringTimeUnits"] = ""
-                print ("CWJSON=", CWJSON)                
                 # now calculate rain 
                 
                 # calendar day rain
@@ -246,7 +245,7 @@ def generateCurrerntWeatherJSON():
                     rainspan = 0
                 CWJSON["7DaysRain"] = rainspan
                 
-                
+
                                 
                 
                 con.commit()
@@ -320,6 +319,7 @@ def generateCurrerntWeatherJSON():
                 CWJSON["WindDirectionUnits"] = "deg"
 
 
+                print ("CWJSON=", CWJSON)                
 
                 return CWJSON
         except mdb.Error as e:
@@ -334,7 +334,7 @@ def generateCurrerntWeatherJSON():
 
 
 
-CWJSON = generateCurrerntWeatherJSON()
+CWJSON = generateCurrentWeatherJSON()
 
 
 def fetchWindData(timeDelta):
@@ -576,7 +576,110 @@ def buildOutdoorTemperature_Humidity_Graph():
     graph =  dcc.Graph(
                     id = {'type' : 'WPGdynamic', 'index': 'graph-oth' },
                     figure=fig,
-                    animate = True
+                    animate = False
+                    )
+    return graph
+
+###################
+####  AQI Graph ####
+###################
+
+def fetchAQI(timeDelta):
+
+        try:
+                #print("trying database")
+                con = mdb.connect('localhost', 'root', config.MySQL_Password, 'SmartGardenSystem');
+                cur = con.cursor()
+                now = datetime.datetime.now()
+                before = now - timeDelta
+                before = before.strftime('%Y-%m-%d %H:%M:%S')
+                query = "SELECT AQI, AQI24Average, TimeStamp FROM `WeatherData` WHERE (TimeStamp > '%s') ORDER BY id ASC" % (before)
+                #print("query=", query)
+                cur.execute(query)
+                con.commit()
+                records = cur.fetchall()
+                #print ("Query records=", records)
+                return records
+        except mdb.Error as e:
+                traceback.print_exc()
+                print("Error %d: %s" % (e.args[0],e.args[1]))
+                con.rollback()
+                #sys.exit(1)
+
+        finally:
+                cur.close()
+                con.close()
+
+
+
+def buildAQIGraphFigure():
+    
+    timeDelta = datetime.timedelta(days=7)
+    records = fetchAQI(timeDelta)
+
+    Time = []
+    AQI = []
+    AQI24 = []
+    for record in records:
+        Time.append(record[2])
+        AQI.append(record[0])
+        AQI24.append(record[1])
+
+    units = ""
+   
+    # Create figure with secondary y-axis
+    fig = go.Figure()
+
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+    # Add traces
+    fig.add_trace(
+        go.Scatter(x=Time, y=AQI24, name="AQI 24 Hour Ave",
+        line = dict(
+                    color = ('red'),
+                    width = 2,
+                    ),
+       ), 
+                    secondary_y = False,
+    )
+
+    fig.add_trace(
+        go.Scatter(x=Time, y=AQI, name="AQI", 
+        line = dict(
+                    color = ('blue'),
+                    width = 2,
+                    ),
+        ),
+                    secondary_y = True
+    )
+
+    # Add figure title
+    fig.update_layout(
+        title_text="AQI", height=400
+    )
+
+    # Set x-axis title
+    fig.update_xaxes(title_text="Time")
+   
+    minTemp = min(AQI)*0.9
+    maxTemp = max(AQI)*1.10
+    # Set y-axes titles
+    fig.update_yaxes(title_text="<b>AQI 24H Ave</b>", range = (minTemp, maxTemp), secondary_y=False, side='left')
+    fig.update_yaxes(title_text="<b>AQI </b>", range = (minTemp,maxTemp), secondary_y=True, side='right')
+    
+    return fig
+
+
+########################
+
+def buildAQI_Graph():
+
+    fig = buildAQIGraphFigure()
+
+    graph =  dcc.Graph(
+                    id = {'type' : 'WPGdynamic', 'index': 'graph-aqi' },
+                    figure=fig,
+                    animate = False
                     )
     return graph
 
@@ -670,7 +773,7 @@ def buildSunlight_UVIndex_Graph():
     graph =  dcc.Graph(
                     id = {'type' : 'WPGdynamic', 'index': 'graph-suv' },
                     figure=fig,
-                    animate = True
+                    animate = False
                     )
     return graph
 
@@ -864,6 +967,7 @@ def WeatherPage():
                 [
                     buildOutdoorTemperature_Humidity_Graph(),
                     buildSunlight_UVIndex_Graph(),
+                    buildAQI_Graph(),
                 ],
                 width = 12,
                 )

@@ -14,6 +14,8 @@ import datetime
 
 import time
 
+import threading
+
 import moisture_sensors 
 import status_page 
 import valve_graphs
@@ -29,7 +31,10 @@ logo = Logo()
 print("new navbar=")
 nav = Navbar()
 
+UpdateCWJSONLock = threading.Lock()
 SGSDASHSOFTWAREVERSION = "004"
+CWJSON = weather_page.generateCurrentWeatherJSON()
+print(CWJSON)
 
 
 
@@ -388,15 +393,26 @@ def updateWeatherImagePage(n_intervals,id, value):
               [State({'type' : 'WPdynamic', 'index' : MATCH}, 'value'  )]
               )
 
-def updateWeatherTextPage(n_intervals,id, value):
-    if ((n_intervals % (5*6)) == 0) or (n_intervals ==0): # 5 minutes -10 second timer
-        CWJSON = weather_page.generateCurrerntWeatherJSON()
-        #print(CWJSON)
-        print("--->>>updateWeatherTextPage", datetime.datetime.now(), n_intervals)
-        print("updateWTP n_intervals", n_intervals)
-        value = str(CWJSON[id['index']]) +" "+ CWJSON[id['index']+'Units']
+def updateWeatherUpdate(n_intervals,id, value):
+
+    global CWJSON
+
+    if ((n_intervals % (1*6)) == 0) or (n_intervals ==0): # 5 minutes -10 second timer
+    #if ((n_intervals % (5*6)) == 0) or (n_intervals ==0): # 5 minutes -10 second timer
+        print("--->>>updateWeatherUpdateString", datetime.datetime.now(), n_intervals)
+        print("updateWeatherUpdate n_intervals =", n_intervals, id['index'])
         if (id['index'] == "StringTime"):
-            value = "Weather Instruments Updated at: "+value
+            UpdateCWJSONLock.acquire()
+            CWJSON = weather_page.generateCurrentWeatherJSON()
+            UpdateCWJSONLock.release()
+            value = str(CWJSON[id['index']]) +" "+ CWJSON[id['index']+'Units']
+            value = "Weather Updated at:" + value
+
+            return [value]
+        
+        UpdateCWJSONLock.acquire()
+        value = str(CWJSON[id['index']]) +" "+ CWJSON[id['index']+'Units']
+        UpdateCWJSONLock.release()
     else:
         raise PreventUpdate
     return [value]
@@ -443,13 +459,17 @@ def updateWeatherGraphPage(n_intervals,id, value):
     if (n_intervals == 0): # stop first update
         raise PreventUpdate
 
-    #if (True): # 5 minutes -10 second timer
-    if ((n_intervals % (5*6)) == 0): # 15 minutes -10 second timer
+    if ((n_intervals % (1*6)) == 0): # 15 minutes -10 second timer
+    #if ((n_intervals % (5*6)) == 0): # 15 minutes -10 second timer
        print("--->>>updateWeatherGraphs", datetime.datetime.now(), n_intervals, id)
+       print("--->>>updateWeatherGraphs:", id['index'])
        if (id['index'] ==  'graph-oth'):
            fig = weather_page.buildOutdoorTemperature_Humidity_Graph_Figure()
        if (id['index'] ==  'graph-suv'):
            fig = weather_page.buildSunlightUVIndexGraphFigure()
+       if (id['index'] ==  'graph-aqi'):
+           fig = weather_page.buildAQIGraphFigure()
+           print("aqi-fig=",fig)
 
     else:
         raise PreventUpdate

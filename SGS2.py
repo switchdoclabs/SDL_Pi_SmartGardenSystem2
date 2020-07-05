@@ -11,7 +11,7 @@ from __future__ import print_function
 from builtins import range
 from past.utils import old_div
 
-SGSVERSION = "010"
+SGSVERSION = "011"
 
 #imports 
 
@@ -23,6 +23,7 @@ import threading
 import json
 import pickle
 import picamera
+import subprocess
 
 from  bmp280 import BMP280
 import SkyCamera
@@ -174,6 +175,8 @@ import util
 import MQTTFunctions
 
 
+
+
 ################
 # BMP280 Setup 
 ################
@@ -320,6 +323,7 @@ def initializeSGSPart2():
         print("----------------------")
         print(returnStatusLine("OLED",config.OLED_Present))
         print(returnStatusLine("BMP280",config.BMP280_Present))
+        print(returnStatusLine("DustSensor",config.DustSensor_Present))
         #print(returnStatusLine("Sunlight Sensor",config.Sunlight_Present))
         #print(returnStatusLine("hdc1000 Sensor",config.hdc1000_Present))
         #print(returnStatusLine("Ultrasonic Level Sensor",config.UltrasonicLevel_Present))
@@ -419,7 +423,7 @@ def initializeScheduler():
              #weatherSensors.readSensors()
 
              state.scheduler.add_job(weatherSensors.writeWeatherRecord, 'interval', seconds=15*60)
-             #state.state.scheduler.add_job(weatherSensors.writeWeatherRecord, 'interval', seconds=1*60)
+             state.scheduler.add_job(weatherSensors.writeITWeatherRecord, 'interval', seconds=15*60)
         
         if (config.BMP280_Present):
              wiredSensors.readWiredSensors(bmp280)
@@ -475,6 +479,9 @@ def initializeScheduler():
         # sensor manual water
         state.scheduler.add_job(Valves.manualCheck, 'interval', seconds=15)
     
+        if (config.DustSensor_Present):
+            #scheduler.add_job(DustSensor.read_AQI, 'interval', seconds=60*5)
+            state.scheduler.add_job(DustSensor.read_AQI, 'interval', seconds=60*11)
     
     	
         #init blynk app state
@@ -574,6 +581,40 @@ def restartSGS():
     # Main Program
 if __name__ == '__main__':
         
+
+    if (config.SWDEBUG):
+        print("Starting pigpio daemon")
+
+    # kill all pigpio instances
+    try:
+        cmd = [ 'killall', 'pigpiod' ]
+        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+        print(output)
+        time.sleep(5)
+    except:
+        #print(traceback.format_exc())
+        pass
+
+    cmd = [ '/usr/bin/pigpiod' ]
+    output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+    print(output)
+################
+# Dust Sensor Setup 
+################
+    import DustSensor
+
+    try:
+        DustSensor.powerOnDustSensor()
+        myData = DustSensor.get_data()
+        #print ("data=",myData)
+        #myAQI = DustSensor.get_aqi()
+        #DustSensor.print_data()
+        #print ("AQI=", myAQI)
+        DustSensor.powerOffDustSensor()
+        config.DustSensor_Present = True
+    except:
+        DustSensor.powerOffDustSensor()
+        config.DustSensor_Present = False
 
     initializeSGSPart1()
     

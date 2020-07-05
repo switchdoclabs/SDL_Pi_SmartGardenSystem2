@@ -120,6 +120,10 @@ Tank_Pump_Level = 15.0
 UltrasonicLevel = 4
 pixelPin = 21
 
+DustSensorSCL = 20
+DustSensorSDA = 21
+DustSensorPowerPin = 12
+
 
 ############
 # device present global variables - DO Not Modify
@@ -133,6 +137,7 @@ SunAirPlus_Present = False
 SolarMAX_Present = False
 OLED_Present = False
 BMP280_Present = False
+DustSensor_Present = False
 
 UltrasonicLevel_Present = True
 
