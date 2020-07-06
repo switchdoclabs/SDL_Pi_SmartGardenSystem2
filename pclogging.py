@@ -17,7 +17,7 @@ import datetime
 import config
 
 import state
-
+import updateBlynk
 import MySQLdb as mdb
 
 
@@ -36,6 +36,14 @@ def systemlog(level,  message):
 
    if (level >= LOWESTDEBUG):
         try:
+                if (level == config.JSON):
+                    if (config.USEBLYNK):
+                        updateBlynk.blynkTerminalUpdate("JSON Loaded") 
+                    pass
+                else:
+                    if (config.USEBLYNK):
+                        updateBlynk.blynkTerminalUpdate(message) 
+                    pass
                 #print("trying database")
                 con = mdb.connect('localhost', 'root', config.MySQL_Password, 'SmartGardenSystem');
                 cur = con.cursor()
@@ -46,9 +54,8 @@ def systemlog(level,  message):
                 con.commit()
 
 
-        except mdb.Error as e:
+        except: 
                 traceback.print_exc()
-                print("Error %d: %s" % (e.args[0],e.args[1]))
                 con.rollback()
                 #sys.exit(1)
         finally:
@@ -146,6 +153,45 @@ def writeMQTTValveChangeRecord(MQTTJSON):
                 del cur
                 del con
 
+def readLastHour24AQI():
+
+ if (config.enable_MySQL_Logging == True):	
+	# open mysql database
+	# write log
+	# commit
+	# close
+        try:
+
+                # first calculate the 24 hour moving average for AQI
+                
+                print("trying database")
+                con = mdb.connect('localhost', 'root', config.MySQL_Password, 'SmartGardenSystem');
+                cur = con.cursor()
+
+                query = "SELECT id, AQI24Average FROM WeatherData ORDER BY id DESC Limit 1" 
+
+                cur.execute(query)
+                myAQIRecords = cur.fetchall()
+                if (len(myAQIRecords > 0)):
+                    state.Hour24_AQI = myAQIRecords[0][1]
+                else:
+                    state.Hour24_AQI = 0.0 
+
+                #print("AQIRecords=",myAQIRecords)
+
+        except mdb.Error as e:
+                traceback.print_exc()
+                print("Error %d: %s" % (e.args[0],e.args[1]))
+                con.rollback()
+                #sys.exit(1)
+
+        finally:
+                cur.close()
+                con.close()
+
+                del cur
+                del con
+
 
 def writeWeatherRecord():
 
@@ -211,12 +257,16 @@ def writeITWeatherRecord():
 	# close
         try:
 
+                print("trying database")
+                con = mdb.connect('localhost', 'root', config.MySQL_Password, 'SmartGardenSystem');
+                cur = con.cursor()
 
-                fields = "DeviceID, ChannelID, Temperature, Humdity, BatteryOK, TimeRead"
+
+                fields = "DeviceID, ChannelID, Temperature, Humidity, BatteryOK, TimeRead"
                 if (len(state.IndoorTH)> 0): 
 
                     for singleChannel in state.IndoorTH:
-                        values = "%d, %d, %6.2f, %6.2f, %s, %s" % (singleChannel["deviceID"], singleChannel["channelID"], singleChannel["temperature"], singleChannel["humidity"], singleChannel["batteryOK"], singleChannel["time"])
+                        values = "%d, %d, %6.2f, %6.2f, \"%s\", \"%s\"" % (singleChannel["deviceID"], singleChannel["channelID"], singleChannel["temperature"], singleChannel["humidity"], singleChannel["batteryOK"], singleChannel["time"])
                         query = "INSERT INTO IndoorTHSensors (%s) VALUES(%s )" % (fields, values)
                         print("query=", query)
                         cur.execute(query)

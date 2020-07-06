@@ -65,6 +65,7 @@ def readJSON(addPath):
                 config.MQTT_Send_Seconds = getJSONValue('MQTT_Send_Seconds')
                 config.UltrasonicLevel = getJSONValue('UltrasonicLevel') 
                 config.Tank_Pump_Level = getJSONValue('Tank_Pump_Level') 
+                config.manual_water = getJSONValue('manual_water') 
                 config.WirelessDeviceJSON = getJSONValue('WirelessDeviceJSON') 
                 #print("WirelessDeviceJSON Read from file", config.WirelessDeviceJSON)
         else:

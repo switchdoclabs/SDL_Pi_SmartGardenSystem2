@@ -171,6 +171,17 @@ RAIN_MAX        =               99999        # 9999.9mm
 # JSON state record
 
 StateJSON = ""
+
+# Blynk State Variables
+WirelessDeviceSelectorPlant = 0
+WirelessDeviceSelectorControl = 0
+ValveSelector = 0
+SecondsToTurnOn = 10
+TurnOnValveButton = False
+BlinkWirelessUnit = False
+
+
+
 # WeatherSTEM info
 
 WeatherSTEMHash = ""

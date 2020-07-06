@@ -292,5 +292,4 @@ def updateGauges(id):
     	return myValue
 
 
-    return 0
 

@@ -11,7 +11,7 @@ from __future__ import print_function
 from builtins import range
 from past.utils import old_div
 
-SGSVERSION = "011"
+SGSVERSION = "012"
 
 #imports 
 
@@ -253,6 +253,8 @@ def returnStatusLine(device, state):
                 returnString = returnString + ":   \t\tPresent"
         else:
                 returnString = returnString + ":   \t\tNot Present"
+        if (config.USEBLYNK):
+            updateBlynk.blynkTerminalUpdate("Device:"+returnString) 
         return returnString
 
 
@@ -260,6 +262,10 @@ def returnStatusLine(device, state):
 # get and store sensor state
 #############################
 
+def checkForButtons():
+
+    if (config.USEBLYNK):
+        updateBlynk.blynkStatusUpdate()
 
 
     
@@ -298,7 +304,11 @@ def initializeSGSPart1():
     # read in JSON
     readJSON.readJSON("")
     readJSON.readJSONSGSConfiguration("")
-    pclogging.systemlog(config.INFO,"SGS Version "+SGSVERSION+" Started")
+    #init blynk app state
+    if (config.USEBLYNK):
+        updateBlynk.blynkInit()
+    message = "SGS Version "+SGSVERSION+" Started"
+    pclogging.systemlog(config.INFO,message)
     pclogging.systemlog(config.JSON,"SGS.JSON Loaded: "+json.dumps(config.JSONData ))
     pclogging.systemlog(config.JSON,"SGSConfigurationJSON.JSON Loaded: "+json.dumps(config.SGSConfigurationJSON ))
     pclogging.systemlog(config.CRITICAL,"No Alarm")
@@ -376,13 +386,16 @@ def initializeSGSPart2():
         print("----------------------")
         config.moisture_sensor_count = len(readJSON.getJSONValue("WirelessDeviceJSON"))*4 
         config.valve_count = len(readJSON.getJSONValue("WirelessDeviceJSON"))*8 
+        print( "Wireless Unit Count:", len(readJSON.getJSONValue("WirelessDeviceJSON")) )
         print("Sensor Count: ",config.moisture_sensor_count)
         print("Valve Count: ",config.valve_count)
         print()
         if (config.USEBLYNK):
-            updateBlynk.blynkTerminalUpdate( "Sensor Count: %d\n"%config.moisture_sensor_count)
-            updateBlynk.blynkTerminalUpdate("Pump Count: %d\n"%config.USB_pump_count)
-    
+            updateBlynk.blynkTerminalUpdate( "Wireless Unit Count:%d"% len(readJSON.getJSONValue("WirelessDeviceJSON")) )
+            updateBlynk.blynkTerminalUpdate("Sensor Count: %d"%config.moisture_sensor_count)
+            updateBlynk.blynkTerminalUpdate("Pump Count: %d"%config.valve_count)
+            updateBlynk.updateStaticBlynk() 
+
         print("----------------------")
         print("Other Smart Garden System Expansions")
         print("----------------------")
@@ -393,6 +406,7 @@ def initializeSGSPart2():
         print(returnStatusLine("Lightning Mode",config.Lightning_Mode))
     
         print(returnStatusLine("MySQL Logging Mode",config.enable_MySQL_Logging))
+        print(returnStatusLine("UseBlynk",config.USEBLYNK))
         print()
         print("----------------------")
     
@@ -448,17 +462,20 @@ def initializeScheduler():
             if (config.GardenCam_Present):
                 state.scheduler.add_job(SkyCamera.takeSkyPicture, 'interval', seconds=int(config.INTERVAL_CAM_PICS__SECONDS))
 
-     # check for force water - note the interval difference with updateState
+        # check for force water - note the interval difference with updateState
         #state.scheduler.add_job(forceWaterPlantCheck, 'interval', seconds=8)
-        
+
+        # every 10 seconds, check for button changes
+        state.scheduler.add_job(checkForButtons, 'interval', seconds=10)
+ 
     
         # check for alarms
         state.scheduler.add_job(checkForAlarms, 'interval', seconds=15)
         #state.scheduler.add_job(checkForAlarms, 'interval', seconds=300)
     
     
-        #if (config.USEBLYNK):
-        #state.scheduler.add_job(updateBlynk.blynkStateUpdate, 'interval', seconds=60)
+        if (config.USEBLYNK):
+             state.scheduler.add_job(updateBlynk.blynkStateUpdate, 'interval', seconds=60)
     
         # MS sensor Read 
         AccessMS.initMoistureSensors() 
@@ -484,9 +501,6 @@ def initializeScheduler():
             state.scheduler.add_job(DustSensor.read_AQI, 'interval', seconds=60*11)
     
     	
-        #init blynk app state
-        if (config.USEBLYNK):
-            updateBlynk.blynkInit()
     	
     	
         
@@ -615,7 +629,7 @@ if __name__ == '__main__':
     except:
         DustSensor.powerOffDustSensor()
         config.DustSensor_Present = False
-
+    pclogging.readLastHour24AQI()
     initializeSGSPart1()
     
     # this is the big exception clause that will turn all pumps off if there is a problem

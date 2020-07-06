@@ -10,15 +10,24 @@ import util
 import state
 # Check for user imports
 import config
+import readJSON
+import traceback
+import psutil
 
-
-DEBUGBLYNK = False 
+DEBUGBLYNK = True 
 
 def blynkInit():
     # initalize button states
     try:
-        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V5?value=0')
-        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V41?value=0')
+        # selectors
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V45?value=0')
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V46?value=0')
+        
+        # SecondsToTurnOn
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V47?value='+str(state.SecondsToTurnOn))
+        # TurnOnValveButton
+        #BlinkWirelessUnit
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V48?value=0')
         if (config.manual_water == False):
             # set the label to disabled 
             label = "Disabled"
@@ -31,14 +40,51 @@ def blynkInit():
             r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V41?offBackColor=%230000FF') # Blue
             if (DEBUGBLYNK):
                 print("blynkInit:WaterEnabled:r.status_code:",r.status_code)
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V5?color=%23FF0000') # Red
+
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V5?value=255')
 
         
-        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V30?value=1')
     except Exception as e:
         print("exception in blynkInit")
         print (e)
         return 0
 
+def updateStaticBlynk():
+        put_header={"Content-Type": "application/json"}
+
+        val = str(len(readJSON.getJSONValue("WirelessDeviceJSON")))
+        put_body = json.dumps([val])
+        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V13', data=put_body, headers=put_header)
+        val = str(config.valve_count)
+        put_body = json.dumps([val])
+        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V14', data=put_body, headers=put_header)
+        val = str(config.moisture_sensor_count)
+        put_body = json.dumps([val])
+        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V15', data=put_body, headers=put_header)
+
+
+        # now do the choices on page two and three
+        myJSONWireless = readJSON.getJSONValue("WirelessDeviceJSON")
+        labels = ""
+        for single in myJSONWireless:
+            myName = str(single["id"])+"/"+single["name"]+"/"+single["ipaddress"]
+            labels = labels + "'"+ myName +"',"
+           
+        put_body = "?labels="+"\""+labels+"\""
+        put_body="?labels=\"Test1\",\"Test2\""
+        print("put_body=", put_body)
+        myRequest= config.BLYNK_URL+config.BLYNK_AUTH+'/update/V45'+put_body
+        print("myRequest=", myRequest)
+        r = requests.get(myRequest)
+
+        #r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V45', data=put_body, headers=put_header)
+        #r = requests.get(myRequest,headers=put_header)
+        if (DEBUGBLYNK):
+                print("updateStaticBlynk:V45 Labels:r.status_code:",r.status_code)
+        
+            
+    
 def blynkResetButton(buttonNumber):
     try:
         r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/'+buttonNumber+'?value=0')
@@ -63,21 +109,23 @@ def blynkEventUpdate():
         print (e)
         return 0
 
+
 def blynkTerminalUpdate(entry):
     try:
         put_header={"Content-Type": "application/json"}
 
+        entry = time.strftime("%Y-%m-%d %H:%M:%S")+": "+entry+"\n"
         put_body = json.dumps([entry])
         if (DEBUGBLYNK):
-            print("blynkStateUpdate:Pre:put_body:",put_body)
-        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V31', data=put_body, headers=put_header)
+            print ("blynkStateUpdate:Pre:put_body:",put_body)
+        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V26', data=put_body, headers=put_header)
         if (DEBUGBLYNK):
-            print("blynkStateUpdate:POST:r.status_code:",r.status_code)
+            print ("blynkStateUpdate:POST:r.status_code:",r.status_code)
     except Exception as e:
-        print("exception in blynkTerminalUpdate")
+        print ("exception in blynkTerminalUpdate")
         print (e)
         return 0
-    
+
 
 def blynkStateUpdate():
     try:
@@ -87,82 +135,53 @@ def blynkStateUpdate():
             print("blynkStateUpdate:")
         blynkEventUpdate()
 
+        # do our percentage active
+        wirelessJSON = readJSON.getJSONValue("WirelessDeviceJSON")
+
+        active = 0 
+        for single in wirelessJSON:
+            if (state.deviceStatus[single['id']]  == True):
+                active = active + 1
+        myPercent = 100.0*active/len(state.deviceStatus) 
         # do the graphs
-
-
-        val = state.AirQuality_Sensor_Value 
+        val = "{:4.1f}".format(myPercent)
         put_body = json.dumps([val])
-        if (DEBUGBLYNK):
-            print("blynkStateUpdate:Pre:put_body:",put_body)
-        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V11', data=put_body, headers=put_header)
-        if (DEBUGBLYNK):
-            print("blynkStateUpdate:POST:r.status_code:",r.status_code)
+        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V1', data=put_body, headers=put_header)
+
+        if (state.lastMainReading != "Never"):
+            val = state.Hour24_AQI
+            put_body = json.dumps([val])
+            if (DEBUGBLYNK):
+                print("blynkStateUpdate:Pre:put_body:",put_body)
+            r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V11', data=put_body, headers=put_header)
+            if (DEBUGBLYNK):
+                print("blynkStateUpdate:POST:r.status_code:",r.status_code)
+     
+            val = util.returnTemperatureCF(state.OutdoorTemperature)
+            put_body = json.dumps([val])
+            r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V12', data=put_body, headers=put_header)
     
-        val = util.returnTemperatureCF(state.Temperature)
-        put_body = json.dumps([val])
-        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V12', data=put_body, headers=put_header)
-
-        val = state.Humidity 
-        put_body = json.dumps([val])
-        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V14', data=put_body, headers=put_header)
-
-        val = state.Sunlight_Vis 
-        put_body = json.dumps([val])
-        if (DEBUGBLYNK):
-            print("blynkStateUpdate:Pre:put_bodyS:",put_body)
-        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V15', data=put_body, headers=put_header)
-        if (DEBUGBLYNK):
-            print("blynkStateUpdate:POSTS:r.status_code:",r.status_code)
-
+    
         # do the boxes
     
-        val = "{:4.1f} {}".format(util.returnTemperatureCF(state.Temperature),util.returnTemperatureCFUnit() )
+        val = "{:4.1f}%".format(psutil.cpu_percent() )
         put_body = json.dumps([val])
         r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V2', data=put_body, headers=put_header)
     
-        val = "{:4.1f}{}".format(state.Humidity,"%")
+        val = "{:4.1f}%".format(psutil.virtual_memory().percent )
         put_body = json.dumps([val])
         r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V3', data=put_body, headers=put_header)
-    
-        val = "{:4.1f}".format(state.Sunlight_Vis)
+
+        myValue = psutil.disk_usage('/')
+        myDPercent = myValue[3]
+        myDPercent = 100.0 - myDPercent
+   
+        val = "{:4.1f}%".format(myDPercent)
         put_body = json.dumps([val])
         r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V4', data=put_body, headers=put_header)
     
-        #gauges
-    
-              
-        val = "{:4.1f}".format(state.Moisture_Humidity_Array[state.blynkPlantNumberDisplay-1])
-        myLabel = "%23{:d} Plant Moisture".format(state.blynkPlantNumberDisplay)
-        if (DEBUGBLYNK):
-            print("blynkStateUpdate:myLable:", myLabel)
-        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V0?label='+myLabel) 
-        if (DEBUGBLYNK):
-            print("blynkStateUpdate:POSTM:r.status_code:",r.status_code)
-        put_body = json.dumps([val])
-        if (DEBUGBLYNK):
-            print("blynkStateUpdate:PreM:put_body:",put_body)
-        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V0', data=put_body, headers=put_header)
-        if (DEBUGBLYNK):
-            print("blynkStateUpdate:POSTM:r.status_code:",r.status_code)
-
-        state.blynkPlantNumberDisplay = state.blynkPlantNumberDisplay + 1
-        if (state.blynkPlantNumberDisplay > config.plant_number):
-            state.blynkPlantNumberDisplay = 1
-    
-    
-    
-        percentWater = state.Tank_Percentage_Full 
-        if (percentWater < config.Tank_Pump_Level):
-            r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V1?color=%23FF0000') # Red
-        else:
-            r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V1?color=%23FF8000') # Orange
-    
-        val = "{:4.1f}".format(percentWater)
-        put_body = json.dumps([val])
-        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V1', data=put_body, headers=put_header)
-        
         # page 2 Moisture Levels
-
+        '''
         for i in range(0,config.plant_number):
             val = "#{:1d}: {:4.1f}%".format(i+1, state.Moisture_Humidity_Array[i])
             put_body = json.dumps([val])
@@ -178,12 +197,13 @@ def blynkStateUpdate():
                     r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/'+updateVirtual+'?color=%23FFFFFF') # White
     
         
-
+        '''
             
         
 
         return 1
     except Exception as e:
+        print (traceback.format_exc())
         print("exception in blynkStateUpdate")
         print (e)
         return 0
@@ -195,88 +215,81 @@ def blynkStatusUpdate():
     try:
         put_header={"Content-Type": "application/json"}
 
-        val = state.SGS_Values[state.SGS_State]
-        if (DEBUGBLYNK):
-            print("blynkStatusUpdate:",val)
-        put_body = json.dumps([val])
-        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V6', data=put_body, headers=put_header)
-    
-        # look for rainbow button change
-        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/get/V5') # read button state
-        if (DEBUGBLYNK):
-            print("blynkStatusUpdate:POSTBR:r.status_code:",r.status_code)
-            print("blynkStatusUpdate:POSTBR:r.text:",r.text)
-    
-        if (r.text == '["1"]'):
-            state.runRainbow = True
-            if (DEBUGBLYNK):
-                print("blynkStatusUpdate:POSTBRC:state.runRainbow set to True")
-        else:
-            state.runRainbow = False
-            if (DEBUGBLYNK):
-                print("blynkStatusUpdate:POSTBRC:state.runRainbow set to False")
+        # read button and menu selection states
+        # state.WirelessDeviceSelectorPlant 
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/get/V49') # read button state
+        myText = r.text
+        print("myTextB=", myText)
+        if (myText == "[]"):
+            myText = "0"
+        myText = myText.replace('["','')
+        myText = myText.replace('"]','')
+        print("myText=", myText)
+        state.WirelessSelectorPlant =  int(myText)
 
-        # look for Turning LED Display Off button change
-        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/get/V30') # read button state
-        if (DEBUGBLYNK):
-            print("blynkStatusUpdate:POSTBR:r.status_code:",r.status_code)
-            print("blynkStatusUpdate:POSTBR:r.text:",r.text)
-   
-        
-        if (r.text == '["1"]'):
-            state.runLEDs = True
-            if (DEBUGBLYNK):
-                print("blynkStatusUpdate:POSTBRC:state.runLEDs set to True")
-        else:
-            state.runLEDs = False
-            if (DEBUGBLYNK):
-                print("blynkStatusUpdate:POSTBRC:state.runLEDs set to False")
+        # state.WirelessDeviceSelectorControl 
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/get/V45') # read button state
+        myText = r.text
+        if (myText == "[]"):
+            myText = "0"
+        myText = myText.replace('["','')
+        myText = myText.replace('"]','')
+        state.WirelessSelectorControl =  int(myText)
 
+        # state.ValveSelector
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/get/V46') # read button state
+        myText = r.text
+        if (myText == "[]"):
+            myText = "0"
+        myText = myText.replace('["','')
+        myText = myText.replace('"]','')
+        state.ValveSelector =  int(myText)
 
+        # state.SecondsToTurnOn
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/get/V47') # read button state
+        myText = r.text
+        if (myText == "[]"):
+            myText = "0"
+        myText = myText.replace('["','')
+        myText = myText.replace('"]','')
+        state.SecondsToTurnOn =  int(myText)
 
-        # look for plant water request
+        # state.TurnOnValveButton
+        # Look for Valve turn on 
         r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/get/V41') # read button state
-        if (DEBUGBLYNK):
-            print("blynkStatusUpdate:POSTPWR:r.status_code:",r.status_code)
-            print("blynkStatusUpdate:POSTPWR:r.text:",r.text)
-        if (r.text == '["1"]'):
-            if (config.manual_water == True):
-                if (state.Plant_Water_Request == False):
-                    # fetch the plant number
-                    r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/get/V40') # read button state
-                    # strip headers
-                    myString = r.text
-                    myString = myString.replace('["', "")
-                    myString = myString.replace('"]', "")
-                    state.Plant_Number_Water_Request = int(myString)
-                    if (DEBUGBLYNK):
-                        print("blynkStatusUpdate:POSTBRC:myString: ", myString)
-                        print("blynkStatusUpdate:POSTBRC:r.text: ", r.text)
-                        print("state.Plant_Number_Water_Request: ", state.Plant_Number_Water_Request)
-                    #set request to True
-                    state.Plant_Water_Request = True
-                    if (DEBUGBLYNK):
-                        print("blynkStatusUpdate:POSTBRC:state.Plant_WaterRequest set to True")
-                else:
-                    r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V41?value=1')
-                    if (DEBUGBLYNK):
-                        print("blynkStatusUpdate:POSTBRC:Plant_WaterRequest already pending")
-            else:
-                r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V41?value=0')
-                state.Plant_Water_Request = False
-                state.Plant_Number_Water_Request = -1
-                if (DEBUGBLYNK):
-                    print("blynkStatusUpdate:POSTBRC:state.Plant_WaterRequest set to False")
-
-        else:
-            state.Plant_Water_Request = False
-            state.Plant_Number_Water_Request = -1
-            if (DEBUGBLYNK):
-                print("blynkStatusUpdate:POSTBRC:state.Plant_WaterRequest set to False")
-                print("blynkStatusUpdate:POSTBRC:state.runRainbow set to False")
-
         
+        if (r.text == '["1"]'):
+            state.TurnOnValveButton = True
+            if (DEBUGBLYNK):
+                print("blynkStatusUpdate:POSTBRC:state.TurnOnValveButton set to True")
+        else:
+            state.TurnOnValveButton = False
+            if (DEBUGBLYNK):
+                print("blynkStatusUpdate:POSTBRC:state.TurnOnValveButton set to False")
+        # state.BlinkWirelessUnit
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/get/V48') # read button state
+        
+        if (r.text == '["1"]'):
+            state.BlinkWirelessUnit = True
+            if (DEBUGBLYNK):
+                print("blynkStatusUpdate:POSTBRC:state.BlinkWirelessUnit set to True")
+        else:
+            state.BlinkWirelessUnit = False
+            if (DEBUGBLYNK):
+                print("blynkStatusUpdate:POSTBRC:state.BlinkWirelessUnit set to False")
 
+        if (DEBUGBLYNK):
+            print("state.WirelessDeviceSelectorPlant =", state.WirelessDeviceSelectorPlant )
+
+            print("state.WirelessDeviceSelectorControl =", state.WirelessDeviceSelectorControl) 
+            print("state.ValveSelector =", state.ValveSelector)
+            print("state.SecondsToTurnOn =", state.SecondsToTurnOn) 
+            print("state.TurnOnValveButton =", state.TurnOnValveButton)
+            print("state.BlinkWirelessUnit =", state.BlinkWirelessUnit)
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V5?color=%23FF0000') # Red
+
+        time.sleep(1)
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V5?color=%2300FF00') # Green
 
         return 1
     except Exception as e:
@@ -376,7 +389,7 @@ def blynkAlarmUpdate():
     
         if (DEBUGBLYNK):
             print("blynkAlarmUpdate:POSTUPDATE:r.status_code:",r.status_code)
-
+        
         return 1
     except Exception as e:
         print("exception in blynkAlarmUpdate")
