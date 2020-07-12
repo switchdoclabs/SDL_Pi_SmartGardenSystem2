@@ -103,6 +103,11 @@ def buildTableFig(myData, title):
         
 def fetchValveJSON(myID, valveNumber):
        
+        # read JSON
+
+        readJSON.readJSON("../")
+        readJSON.readJSONSGSConfiguration("../")
+
         myJSON=config.SGSConfigurationJSON
 
         #print("myJSON=", myJSON) 
@@ -184,7 +189,7 @@ def updateProgramming():
       layout = [] 
       data = fetchProgramming()
       fig = buildTableFig(data,"Next Scheduled Events")
-      print("upProgfig=", fig)
+      #print("upProgfig=", fig)
       layout.append(dcc.Graph(id={"type": "VSdynamic", "index": "pvprogramming"},figure=fig, ))	
 
       return layout

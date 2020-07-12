@@ -1523,20 +1523,6 @@ class SGSConfigure(App):
 
     def ScanForHardwareWorker(self, name): 
        
-        '''
-        returnJSON = [{"return_value": 0, "id": "5051", "name": "WindowPlants", "ipaddress": "192.168.1.4", "hardware": "esp32", "return_string": "5051,1,1,1,1,004-P4", "connected": True}, {"return_value": 0, "id": "14D5", "name": "GardenRoom", "ipaddress": "192.168.1.42", "hardware": "esp32", "return_string": "14D5,1,1,1,1,004-P4", "connected": True}]
-        print ("TAKE OUT DEBUG returnJSON", returnJSON)
-      
-        self.WirelessDeviceJSON = returnJSON
-        self.mainContainer.remove_child(self.screen0)
-        self.screen0 = self.buildScreen0()
-        self.mainContainer.append(self.screen0,'screen0')
-       
-        self.progress.set_value(100)
-        self.menubar.set_enabled(True)
-        self.SFHWorking = False
-        return
-        '''
 
         print ("Scanning for Hardware")
         self.stop_flag = False

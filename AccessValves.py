@@ -3,6 +3,7 @@ import readJSON
 import state
 import config
 import MQTTFunctions
+import time
 
 def sendCommandToWireless(myIP, myCommand):
         myURL = 'http://'+str(myIP)+'/'+myCommand
@@ -36,6 +37,10 @@ def turnOnTimedValve(singleValve):
         sendCommandToWireless(myIP, myCommand)
         '''
         MQTTFunctions.sendMQTTValve(str(singleValve["id"]), str(singleValve["ValveNumber"]), 1, str(singleValve["OnTimeInSeconds"]))
+        #
+        # DEBUG slow down by 1 second
+        #
+        time.sleep(1)
 
 def turnOffAllValves():
 

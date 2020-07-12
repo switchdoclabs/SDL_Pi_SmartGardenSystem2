@@ -13,21 +13,60 @@ import config
 import readJSON
 import traceback
 import psutil
+import AccessValves
+import MQTTFunctions
+import pclogging
+
 
 DEBUGBLYNK = True 
+
+
+
+def blynkSetValvesOff(base):
+
+    for i in range(1,9):
+        virtualPin = "V"+ str(i+ base)
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/'+virtualPin+'?value=255')
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/'+virtualPin+'?color=%23FF0000') # Red
+
+
+def blynkSetValves(myID, base):
+   myValveState = pclogging.getValveState(myID)
+   for i in range(1,9):
+        valve = myValveState[i]
+        print("valve[%i]=%s" % (i, valve))
+        virtualPin = "V"+str(base+i)
+        print("vitualPin", virtualPin) 
+        if (valve == "1"):
+            r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/'+virtualPin+'?color=%2300FF00') # Green
+        else:
+            r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/'+virtualPin+'?color=%23FF0000') # Red
+
 
 def blynkInit():
     # initalize button states
     try:
+        blynkSetValvesOff(29)
+        blynkSetValvesOff(49)
         # selectors
         r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V45?value=0')
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V49?value=0')
         r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V46?value=0')
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V22?value=')
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V23?value=')
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V24?value=')
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V25?value=')
         
         # SecondsToTurnOn
         r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V47?value='+str(state.SecondsToTurnOn))
         # TurnOnValveButton
         #BlinkWirelessUnit
         r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V48?value=0')
+        put_body = "?value=No Wireless Unit Selected"
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V39', data=put_body )
+        time.sleep(0.5)
+        put_body = "?value=No Wireless Unit Selected"
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V40', data=put_body)
         if (config.manual_water == False):
             # set the label to disabled 
             label = "Disabled"
@@ -35,11 +74,12 @@ def blynkInit():
             if (DEBUGBLYNK):
                 print("blynkInit:WaterDisabled:r.status_code:",r.status_code)
         else:
-            label = "Water Plant"
+            label = "Turn On Valve"
             r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V41?offLabel='+label)
             r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V41?offBackColor=%230000FF') # Blue
             if (DEBUGBLYNK):
                 print("blynkInit:WaterEnabled:r.status_code:",r.status_code)
+        r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V41?value=0')
         r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V5?color=%23FF0000') # Red
 
         r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V5?value=255')
@@ -71,6 +111,7 @@ def updateStaticBlynk():
             myName = str(single["id"])+"/"+single["name"]+"/"+single["ipaddress"]
             labels = labels + "'"+ myName +"',"
            
+        '''
         put_body = "?labels="+"\""+labels+"\""
         put_body="?labels=\"Test1\",\"Test2\""
         print("put_body=", put_body)
@@ -82,7 +123,7 @@ def updateStaticBlynk():
         #r = requests.get(myRequest,headers=put_header)
         if (DEBUGBLYNK):
                 print("updateStaticBlynk:V45 Labels:r.status_code:",r.status_code)
-        
+       ''' 
             
     
 def blynkResetButton(buttonNumber):
@@ -117,10 +158,10 @@ def blynkTerminalUpdate(entry):
         entry = time.strftime("%Y-%m-%d %H:%M:%S")+": "+entry+"\n"
         put_body = json.dumps([entry])
         if (DEBUGBLYNK):
-            print ("blynkStateUpdate:Pre:put_body:",put_body)
+            print ("blynkTerminalUpdate:Pre:put_body:",put_body)
         r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V26', data=put_body, headers=put_header)
         if (DEBUGBLYNK):
-            print ("blynkStateUpdate:POST:r.status_code:",r.status_code)
+            print ("blynkTerminalUpdate:POST:r.status_code:",r.status_code)
     except Exception as e:
         print ("exception in blynkTerminalUpdate")
         print (e)
@@ -180,26 +221,49 @@ def blynkStateUpdate():
         put_body = json.dumps([val])
         r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V4', data=put_body, headers=put_header)
     
-        # page 2 Moisture Levels
-        '''
-        for i in range(0,config.plant_number):
-            val = "#{:1d}: {:4.1f}%".format(i+1, state.Moisture_Humidity_Array[i])
-            put_body = json.dumps([val])
-            updateVirtual = "V"+str(i+21)
-            r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/'+updateVirtual, data=put_body, headers=put_header)
-            
-            if (state.Moisture_Humidity_Array[i] <= state.Alarm_Moisture_Sensor_Fault):
-                r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/'+updateVirtual+'?color=%23FF0000') # Red
-            else:
-                if (state.Moisture_Humidity_Array[i] >= state.Moisture_Threshold):
-                    r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/'+updateVirtual+'?color=%2300FF00') # Green
-                else:
-                    r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/'+updateVirtual+'?color=%23FFFFFF') # White
-    
+        # page 2 SensorsLevels
+        myID = ""
+        myName = "No Wireless Unit Selected"
+        PlantIPAddress = ""
+        if (state.WirelessDeviceSelectorPlant > 0):
+            myJSONWireless = readJSON.getJSONValue("WirelessDeviceJSON")
+            i = 0 
+            if (len(myJSONWireless) > state.WirelessDeviceSelectorPlant):
+                myName = str(i)+":"+"No Wireless Unit Selected"
+                myID = ""
+            for single in myJSONWireless:
+                i = i+ 1
+                if ( state.WirelessDeviceSelectorPlant  == i): 
+                    myName = str(i)+": "+str(single["id"])+"/"+single["name"]+"/"+single["ipaddress"]
+                    PlantIPAddress = single["ipaddress"]
+                    myID = single["id"]
+            if (myID != ""):
+                print("setting Valves by Plant")
+                blynkSetValves(myID, 29)
+           
+            # now have ID, so can find sensor values
+            if (len(state.moistureSensorStates) > 0):
+                for singleSensor in state.moistureSensorStates:
+                    if (str(singleSensor["id"]) == str(myID)):
+                        updateVirtual = "V"+str(int(singleSensor["sensorNumber"]) + 21)
+                        val = "{:4.1f}%".format( float(singleSensor["sensorValue"]))
+                        put_body = json.dumps([val])
+                        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/'+updateVirtual, data=put_body, headers=put_header)
+
+
         
-        '''
-            
-        
+        if (state.WirelessDeviceSelectorControl > 0):
+            myJSONWireless = readJSON.getJSONValue("WirelessDeviceJSON")
+            if (len(myJSONWireless) > state.WirelessDeviceSelectorControl):
+                myID = ""
+                i = 0
+                for single in myJSONWireless:
+                    i = i+ 1
+                    if ( state.WirelessDeviceSelectorControl  == i): 
+                        myID = single["id"]
+                if (myID != ""):
+                    print("setting Valves by Control")
+                    blynkSetValves(myID,49)
 
         return 1
     except Exception as e:
@@ -225,7 +289,24 @@ def blynkStatusUpdate():
         myText = myText.replace('["','')
         myText = myText.replace('"]','')
         print("myText=", myText)
-        state.WirelessSelectorPlant =  int(myText)
+        state.WirelessDeviceSelectorPlant =  int(myText)
+        # now do the choices on page two and three
+        myName = "No Wireless Unit Selected"
+        PlantIPAddress = ""
+        if (state.WirelessDeviceSelectorPlant > 0):
+            myJSONWireless = readJSON.getJSONValue("WirelessDeviceJSON")
+            i = 0 
+            if (len(myJSONWireless) > state.WirelessDeviceSelectorPlant):
+                myName = str(i)+":"+"No Wireless Unit Selected"
+            for single in myJSONWireless:
+                i = i+ 1
+                if ( state.WirelessDeviceSelectorPlant  == i): 
+                    myName = str(i)+": "+str(single["id"])+"/"+single["name"]+"/"+single["ipaddress"]
+                    PlantIPAddress = single["ipaddress"]
+           
+        val = myName 
+        put_body = json.dumps([val])
+        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V40', data=put_body, headers=put_header)
 
         # state.WirelessDeviceSelectorControl 
         r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/get/V45') # read button state
@@ -234,7 +315,27 @@ def blynkStatusUpdate():
             myText = "0"
         myText = myText.replace('["','')
         myText = myText.replace('"]','')
-        state.WirelessSelectorControl =  int(myText)
+        state.WirelessDeviceSelectorControl =  int(myText)
+
+        # now do the choices on page two and three
+        myControlName = "No Wireless Unit Selected"
+        ControlIPAddress = ""
+        ControlID = ""
+        if (state.WirelessDeviceSelectorControl > 0):
+            myJSONWireless = readJSON.getJSONValue("WirelessDeviceJSON")
+            i = 0 
+            if (len(myJSONWireless) > state.WirelessDeviceSelectorControl):
+                myControlName = str(i)+":"+"No Wireless Unit Selected"
+            for single in myJSONWireless:
+                i = i+ 1
+                if ( state.WirelessDeviceSelectorControl  == i): 
+                    myControlName = str(i)+": "+str(single["id"])+"/"+single["name"]+"/"+single["ipaddress"]
+                    ControlIPAddress = single["ipaddress"]
+                    ControlID = str(single["id"]) 
+           
+        val = myControlName 
+        put_body = json.dumps([val])
+        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V39', data=put_body, headers=put_header)
 
         # state.ValveSelector
         r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/get/V46') # read button state
@@ -286,11 +387,33 @@ def blynkStatusUpdate():
             print("state.SecondsToTurnOn =", state.SecondsToTurnOn) 
             print("state.TurnOnValveButton =", state.TurnOnValveButton)
             print("state.BlinkWirelessUnit =", state.BlinkWirelessUnit)
+
+
         r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V5?color=%23FF0000') # Red
 
         time.sleep(1)
         r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V5?color=%2300FF00') # Green
+        # now deal with the button pushes
 
+        if (state.BlinkWirelessUnit == True):
+            if (ControlIPAddress != ""):
+                myCommand = "blinkPixelCommand?params=admin"
+                result = AccessValves.sendCommandToWireless(ControlIPAddress, myCommand)
+            r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V48?value=0')
+        if (state.TurnOnValveButton == True):
+            if (ControlID != ""):
+                if (state.ValveSelector >0):
+                    if (state.SecondsToTurnOn > 0):
+                        if (config.manual_water == True):
+                            MQTTFunctions.sendMQTTValve(ControlID, str(state.ValveSelector), 1, str(state.SecondsToTurnOn))
+                            message = "Manual Valve Actuated:"+ myControlName
+                            pclogging.systemlog(config.INFO,message)
+                 
+                            pclogging.valvelog(ControlID, str(state.ValveSelector),1, "Manual Event ", "", state.SecondsToTurnOn)
+            r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V41?value=0')
+
+
+        blynkStateUpdate()
         return 1
     except Exception as e:
         print("exception in blynkStatusUpdate")

@@ -96,6 +96,36 @@ def sensorlog(DeviceID, SensorNumber, SensorValue, SensorType, TimeRead ):
 
 
 
+def getValveState(id):
+ if (config.enable_MySQL_Logging == True):	
+	# open mysql database
+	# write log
+	# commit
+	# close
+        try:
+                #print("trying database")
+                con = mdb.connect('localhost', 'root', config.MySQL_Password, 'SmartGardenSystem');
+                cur = con.cursor()
+                query = "SELECT * From ValveRecord WHERE DeviceID = '%s' ORDER BY ID DESC LIMIT 1" % id
+                print("query=", query)
+                cur.execute(query)
+                myRecords = cur.fetchall()
+                print ('myRecords=',myRecords)
+                if (len(myRecords) == 0):
+                    return "V0000000"
+                return  myRecords[0][2]
+        except mdb.Error as e:
+                traceback.print_exc()
+                print("Error %d: %s" % (e.args[0],e.args[1]))
+                #sys.exit(1)
+
+        finally:
+                cur.close()
+                con.close()
+
+                del cur
+                del con
+        
 
 def valvelog(DeviceID, ValveNumber, State, Source, ValveType, Seconds):
  if (config.enable_MySQL_Logging == True):	
@@ -152,6 +182,8 @@ def writeMQTTValveChangeRecord(MQTTJSON):
 
                 del cur
                 del con
+
+        return "V00000000"
 
 def readLastHour24AQI():
 

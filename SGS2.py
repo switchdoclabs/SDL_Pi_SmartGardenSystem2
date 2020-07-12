@@ -11,7 +11,7 @@ from __future__ import print_function
 from builtins import range
 from past.utils import old_div
 
-SGSVERSION = "012"
+SGSVERSION = "013"
 
 #imports 
 
@@ -376,7 +376,12 @@ def initializeSGSPart2():
             topic = "SGS/" + single["id"]
             print("subscribing to ", topic)
             state.WirelessMQTTClient.subscribe(topic)
+            # write out to ValveChanges for startup
+            myJSON = {}
+            myJSON["id"] = single["id"]
+            myJSON["valvestate"] = "V00000000"
 
+            pclogging.writeMQTTValveChangeRecord(myJSON)
 
         print()
     
@@ -474,8 +479,8 @@ def initializeScheduler():
         #state.scheduler.add_job(checkForAlarms, 'interval', seconds=300)
     
     
-        if (config.USEBLYNK):
-             state.scheduler.add_job(updateBlynk.blynkStateUpdate, 'interval', seconds=60)
+        #if (config.USEBLYNK):
+        #     state.scheduler.add_job(updateBlynk.blynkStateUpdate, 'interval', seconds=60)
     
         # MS sensor Read 
         AccessMS.initMoistureSensors() 
