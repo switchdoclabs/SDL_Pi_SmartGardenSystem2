@@ -68,9 +68,11 @@ def readJSON(addPath):
                 config.manual_water = getJSONValue('manual_water') 
                 config.WirelessDeviceJSON = getJSONValue('WirelessDeviceJSON') 
                 #print("WirelessDeviceJSON Read from file", config.WirelessDeviceJSON)
+                return True
         else:
-            print ("SGS.JSON File does not exist")
+            #print ("SGS.JSON File does not exist")
             JSONsetDefaults()
+            return False
 
 
 

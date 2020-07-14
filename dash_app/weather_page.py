@@ -158,6 +158,8 @@ def generateCurrentWeatherJSON():
                 #print("query=", query)
                 cur.execute(query)
                 records = cur.fetchall()
+                if (len(records) == 0):
+                    return {}
                 #print ("queryrecords=",records)
                 # get column names
                 query = "SHOW COLUMNS FROM WeatherData"

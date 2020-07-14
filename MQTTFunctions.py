@@ -49,20 +49,24 @@ def on_WirelessMQTTClientmessage(client, userdata, message):
     MQTTJSON = json.loads(message.payload.decode("utf-8"))
 
     if (str(MQTTJSON['messagetype']) == str(MQTTVALVECHANGE)):
-        print("Valve Change Received")
+        if (config.SWDEBUG):
+            print("Valve Change Received")
         pclogging.writeMQTTValveChangeRecord(MQTTJSON)
 
     if (str(MQTTJSON['messagetype']) == str(MQTTALARM)):
-        print("Alarm Message Received")
+        if (config.SWDEBUG):
+            print("Alarm Message Received")
         pclogging.systemlog(config.CRITICAL,MQTTJSON['argument'])
 
     if (str(MQTTJSON['messagetype']) == str(MQTTDEBUG)):
-        print("Debug Message Recieved")
+        if (config.SWDEBUG):
+            print("Debug Message Recieved")
         temp = str(MQTTJSON['id'])+", "+str(MQTTJSON['value'])
         pclogging.systemlog(config.DEBUG,temp)
 
     if (str(MQTTJSON['messagetype']) == str(MQTTSENSORS)):
-        print("Sensor Message Recieved")
+        if (config.SWDEBUG):
+            print("Sensor Message Recieved")
         processSensorMessage(MQTTJSON)
 
 
@@ -104,8 +108,8 @@ def processSensorMessage(MQTTJSON):
 
 
 def on_WirelessMQTTClientlog(client, userdata, level, buf):
-    #if (config.SWDEBUG):
-    print("log: ",buf)
+    if (config.SWDEBUG):
+        print("MQTT: ",buf)
     pass
 
 def startWirelessMQTTClient():

@@ -15,8 +15,7 @@ import ipaddress
 import subprocess
 import datetime
 import sys
-#import readJSON
-
+import os
 
 class AppURLopener(urllib.request.FancyURLopener):
     version = "Mozilla/5.0"
@@ -1592,7 +1591,7 @@ class SGSConfigure(App):
         self.server.server_starter_instance._alive = False
         self.server.server_starter_instance._sserver.shutdown()
         print("server stopped") 
-        exit()
+        os._exit(os.EX_OK)
         
     def onExit(self, widget, name='', surname=''):
         # save and exit
@@ -1602,7 +1601,7 @@ class SGSConfigure(App):
         self.server.server_starter_instance._alive = False
         self.server.server_starter_instance._sserver.shutdown()
         print("server stopped") 
-        exit()
+        os._exit(os.EX_OK)
 
     def onReset(self, widget, name='', surname=''):
         print("Reset clicked")

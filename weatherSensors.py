@@ -53,14 +53,14 @@ def randomadd(value, spread):
 def processF300Data(sLine):
 
     if (config.SWDEBUG):
-        sys.stdout.write("processing F300 Data\n")
-        sys.stdout.write('This is the raw data: ' + sLine + '\n')
+        sys.stdout.write("processing SDL F300 Data\n")
+        sys.stdout.write('JSON Data: ' + sLine + '\n')
 
     var = json.loads(sLine)
 
-    print("looking for buildJSONSemaphore acquire")
+    #print("looking for buildJSONSemaphore acquire")
     state.buildJSONSemaphore.acquire()
-    print("buildJSONSemaphore acquired")
+    #print("buildJSONSemaphore acquired")
     # outside temperature and Humidity
 
     state.mainID = var["id"] 
@@ -86,7 +86,7 @@ def processF300Data(sLine):
             sys.stdout.write('This is the raw temperature: ' + str(wTemp) + '\n')
         # put in previous temperature 
         wtemp = state.OutdoorTemperature 
-    print("wTemp=%s %s", (str(wTemp),nowStr() ));
+    #print("wTemp=%s %s", (str(wTemp),nowStr() ));
     if (ucHumi > 100.0):
         # bad humidity
         # put in previous humidity
@@ -123,7 +123,7 @@ def processF300Data(sLine):
     #if (config.SWDEBUG):
     #    print("currentJSON = ", state.currentStateJSON)
     state.buildJSONSemaphore.release()
-    print("buildJSONSemaphore released")
+    #print("buildJSONSemaphore released")
 
 
 
@@ -132,9 +132,9 @@ def processF007THData(sLine):
     if (config.SWDEBUG):
         sys.stdout.write('This is the raw data: ' + sLine + '\n')
     
-    print("looking for buildJSONSemaphore acquire")
+    #print("looking for buildJSONSemaphore acquire")
     state.buildJSONSemaphore.acquire()
-    print("buildJSONSemaphore acquired")
+    #print("buildJSONSemaphore acquired")
     var = json.loads(sLine)
 
     state.mainID = var["device"] + var["channel"]
@@ -154,17 +154,17 @@ def processF007THData(sLine):
     #if (config.SWDEBUG):
     #    print("currentJSON = ", state.currentStateJSON)
     state.buildJSONSemaphore.release()
-    print("buildJSONSemaphore released")
+    #print("buildJSONSemaphore released")
 
 # write out SQL Inside TH Monitors
 
 def writeITWeatherRecord():
 
-    print("writeITWeatherRecord looking for buildJSONSemaphore acquire")
+    #print("writeITWeatherRecord looking for buildJSONSemaphore acquire")
     state.buildJSONSemaphore.acquire()
-    print("writeITWeatherRecord buildJSONSemaphore acquired")
+    #print("writeITWeatherRecord buildJSONSemaphore acquired")
 
-    print(state.lastMainReading)
+    #print(state.lastMainReading)
 
     if (state.lastIndoorReading != "Never"):
         print("before ITwriteWeatherRecord")
@@ -173,7 +173,7 @@ def writeITWeatherRecord():
         if (config.SWDEBUG):
             print("IT Weather Reading Not Recieved Yet")
     state.buildJSONSemaphore.release()
-    print("writeITWeatherRecord buildJSONSemaphore released")
+    #print("writeITWeatherRecord buildJSONSemaphore released")
 
 
 
@@ -181,9 +181,9 @@ def writeITWeatherRecord():
 # write out SQL record
 
 def writeWeatherRecord():
-    print("writeWeatherRecord looking for buildJSONSemaphore acquire")
+    #print("writeWeatherRecord looking for buildJSONSemaphore acquire")
     state.buildJSONSemaphore.acquire()
-    print("writeWeatherRecord buildJSONSemaphore acquired")
+    #print("writeWeatherRecord buildJSONSemaphore acquired")
 
     print(state.lastMainReading)
 
@@ -194,7 +194,7 @@ def writeWeatherRecord():
         if (config.SWDEBUG):
             print("Weather Reading Not Recieved Yet")
     state.buildJSONSemaphore.release()
-    print("writeWeatherRecord buildJSONSemaphore released")
+    #print("writeWeatherRecord buildJSONSemaphore released")
 
 # main read 433HMz Sensor Loop
 def readSensors():

@@ -12,7 +12,7 @@ def buildITReading (DeviceID, ChannelID, Temperature, Humidity, BatteryOK, time)
     newchannel["batteryOK"] = BatteryOK
     newchannel["time"] = time
     state.IndoorTH.append(newchannel)
-    print("built IndoorIH")
+    #print("built IndoorIH")
 
 
 def addITReading(DeviceID, ChannelID, Temperature, Humidity, BatteryOK, Time):
@@ -28,10 +28,10 @@ def addITReading(DeviceID, ChannelID, Temperature, Humidity, BatteryOK, Time):
                 singleChannel["batteryOK"] = BatteryOK
                 singleChannel["time"] = Time
 
-                print ("state.IndoorTH=",state.IndoorTH)
+                #print ("state.IndoorTH=",state.IndoorTH)
                 return
     buildITReading(DeviceID, ChannelID, Temperature, Humidity, BatteryOK, Time)
-    print ("state.IndoorTH=",state.IndoorTH)
+    #print ("state.IndoorTH=",state.IndoorTH)
 
 
 

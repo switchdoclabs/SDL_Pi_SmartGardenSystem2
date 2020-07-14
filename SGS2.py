@@ -11,7 +11,7 @@ from __future__ import print_function
 from builtins import range
 from past.utils import old_div
 
-SGSVERSION = "013"
+SGSVERSION = "014"
 
 #imports 
 
@@ -225,7 +225,7 @@ except:
 #############################
 
 def tick():
-    print('Tick! The time is: %s' % datetime.datetime.now())
+    print('The time is: %s' % datetime.datetime.now())
 
 
 def killLogger():
@@ -302,7 +302,13 @@ def initializeSGSPart1():
     
     # read in JSON
     # read in JSON
-    readJSON.readJSON("")
+    if (readJSON.readJSON("") == False):
+        print("#############################")
+        print("No SGS.JSON file present - configure with 'sudo python3 SGSConfigure.py'")
+        print("#############################")
+        exit()
+
+        
     readJSON.readJSONSGSConfiguration("")
     #init blynk app state
     if (config.USEBLYNK):
@@ -432,7 +438,7 @@ def initializeScheduler():
         state.scheduler.add_job(tick, 'interval', seconds=5*60)
         
         # read wireless sensor package
-        print("Before Adding readSensors Job")
+        #print("Before Adding readSensors Job")
         if(config.Weather_Present):
              print("Adding readSensors Job")
 	     # start in 10 seconds

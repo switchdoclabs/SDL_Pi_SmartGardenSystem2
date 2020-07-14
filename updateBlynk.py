@@ -18,7 +18,7 @@ import MQTTFunctions
 import pclogging
 
 
-DEBUGBLYNK = True 
+DEBUGBLYNK = False 
 
 
 
@@ -34,9 +34,9 @@ def blynkSetValves(myID, base):
    myValveState = pclogging.getValveState(myID)
    for i in range(1,9):
         valve = myValveState[i]
-        print("valve[%i]=%s" % (i, valve))
+        #print("valve[%i]=%s" % (i, valve))
         virtualPin = "V"+str(base+i)
-        print("vitualPin", virtualPin) 
+        #print("vitualPin", virtualPin) 
         if (valve == "1"):
             r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/update/'+virtualPin+'?color=%2300FF00') # Green
         else:
@@ -283,12 +283,12 @@ def blynkStatusUpdate():
         # state.WirelessDeviceSelectorPlant 
         r = requests.get(config.BLYNK_URL+config.BLYNK_AUTH+'/get/V49') # read button state
         myText = r.text
-        print("myTextB=", myText)
+        #print("myTextB=", myText)
         if (myText == "[]"):
             myText = "0"
         myText = myText.replace('["','')
         myText = myText.replace('"]','')
-        print("myText=", myText)
+        #print("myText=", myText)
         state.WirelessDeviceSelectorPlant =  int(myText)
         # now do the choices on page two and three
         myName = "No Wireless Unit Selected"
