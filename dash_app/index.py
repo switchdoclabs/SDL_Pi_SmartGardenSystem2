@@ -33,8 +33,6 @@ nav = Navbar()
 
 UpdateCWJSONLock = threading.Lock()
 SGSDASHSOFTWAREVERSION = "004"
-CWJSON = weather_page.generateCurrentWeatherJSON()
-print(CWJSON)
 
 
 
@@ -395,7 +393,6 @@ def updateWeatherImagePage(n_intervals,id, value):
 
 def updateWeatherUpdate(n_intervals,id, value):
 
-    global CWJSON
 
     if ((n_intervals % (1*6)) == 0) or (n_intervals ==0): # 5 minutes -10 second timer
     #if ((n_intervals % (5*6)) == 0) or (n_intervals ==0): # 5 minutes -10 second timer
@@ -403,15 +400,15 @@ def updateWeatherUpdate(n_intervals,id, value):
         print("updateWeatherUpdate n_intervals =", n_intervals, id['index'])
         if (id['index'] == "StringTime"):
             UpdateCWJSONLock.acquire()
-            CWJSON = weather_page.generateCurrentWeatherJSON()
+            weather_page.CWJSON = weather_page.generateCurrentWeatherJSON()
             UpdateCWJSONLock.release()
-            value = str(CWJSON[id['index']]) +" "+ CWJSON[id['index']+'Units']
+            value = str(weather_page.CWJSON[id['index']]) +" "+ weather_page.CWJSON[id['index']+'Units']
             value = "Weather Updated at:" + value
 
             return [value]
         
         UpdateCWJSONLock.acquire()
-        value = str(CWJSON[id['index']]) +" "+ CWJSON[id['index']+'Units']
+        value = str(weather_page.CWJSON[id['index']]) +" "+ weather_page.CWJSON[id['index']+'Units']
         UpdateCWJSONLock.release()
     else:
         raise PreventUpdate

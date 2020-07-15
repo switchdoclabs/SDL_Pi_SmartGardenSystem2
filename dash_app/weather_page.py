@@ -149,17 +149,15 @@ def WUnits():
 
 
 def generateCurrentWeatherJSON():
-    
         try:
-                #print("trying database")
                 con = mdb.connect('localhost', 'root', config.MySQL_Password, 'SmartGardenSystem');
                 cur = con.cursor()
                 query = "SELECT * FROM `WeatherData` ORDER BY id DESC LIMIT 1" 
                 #print("query=", query)
                 cur.execute(query)
                 records = cur.fetchall()
-                if (len(records) == 0):
-                    return {}
+                weatherRecordCount = len(records)
+                
                 #print ("queryrecords=",records)
                 # get column names
                 query = "SHOW COLUMNS FROM WeatherData"
@@ -169,11 +167,22 @@ def generateCurrentWeatherJSON():
                 CWJSON = {}
                 for i in range(0,fieldcount):
                     if (names[i][0] == "TimeStamp"):
-                        CWJSON[names[i][0]] = records[0][i]
+                        if (weatherRecordCount == 0): 
+                            CWJSON[names[i][0]] = 0;
+                        else:
+                            CWJSON[names[i][0]] = records[0][i]
                     else:
-                        CWJSON[names[i][0]] = float(records[0][i])
-                CWJSON["StringTime"] = records[0][1].strftime("%d-%b-%Y %H:%M:%S") 
+                        if (weatherRecordCount == 0): 
+                            CWJSON[names[i][0]] = 0;
+                        else:
+                            CWJSON[names[i][0]] = float(records[0][i])
+                if (weatherRecordCount == 0): 
+                    CWJSON["StringTime"] = "" 
+                else:
+                    CWJSON["StringTime"] = records[0][1].strftime("%d-%b-%Y %H:%M:%S") 
                 CWJSON["StringTimeUnits"] = ""
+
+                print("CWJSON=", CWJSON)
                 # now calculate rain 
                 
                 # calendar day rain
@@ -324,19 +333,16 @@ def generateCurrentWeatherJSON():
                 print ("CWJSON=", CWJSON)                
 
                 return CWJSON
-        except mdb.Error as e:
+        except: 
                 traceback.print_exc()
-                print("Error %d: %s" % (e.args[0],e.args[1]))
-                con.rollback()
                 #sys.exit(1)
 
         finally:
                 cur.close()
                 con.close()
+        print("done generating CWJSON=", CWJSON)
+        return CWJSON
 
-
-
-CWJSON = generateCurrentWeatherJSON()
 
 
 def fetchWindData(timeDelta):
@@ -372,6 +378,8 @@ def fetchWindData(timeDelta):
                 #print ("df=", df)
                 #print("number of records=", totalRecords)      
                 # normalize df
+                if (totalRecords == 0):
+                    return df
                 for single in df:
                      for i in range(0,8):
                           single[i] = round(100.0*float(single[i])/float(totalRecords), 2)
@@ -519,6 +527,13 @@ def buildOutdoorTemperature_Humidity_Graph_Figure():
         Temperature.append(record[0])
         Humidity.append(record[1])
 
+    if (len(records) == 0):
+        fig = go.Figure()
+        fig.update_layout(
+            height=800,
+            title_text='No Weather Data Available')
+        return fig
+
     # set units
     English_Metric = readJSON.getJSONValue("English_Metric")
 
@@ -631,6 +646,13 @@ def buildAQIGraphFigure():
    
     # Create figure with secondary y-axis
     fig = go.Figure()
+    if (len(records) == 0):
+        fig = go.Figure()
+        fig.update_layout(
+            height=800,
+            title_text='No Weather Data Available')
+        return fig
+
 
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
@@ -728,6 +750,13 @@ def buildSunlightUVIndexGraphFigure():
 
     # Create figure with secondary y-axis
     fig = go.Figure()
+    if (len(records) == 0):
+        fig = go.Figure()
+        fig.update_layout(
+            height=800,
+            title_text='No Weather Data Available')
+        return fig
+
 
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
@@ -788,10 +817,12 @@ def buildSunlight_UVIndex_Graph():
 ################
 
 def WeatherPage():
+    global CWJSON
     maintextsize = "2.0em"
     subtextcolor = "green"
     maintextcolor = "black"
 
+    print("WP-CWSJON=", CWJSON)
     Row1 = html.Div(
         [ 
         #dbc.Row( dbc.Col(html.Div(id="Weather Instruments"))),
@@ -992,6 +1023,7 @@ def WeatherPage():
     return layout
 
 
+CWJSON = generateCurrentWeatherJSON()
 
 
 
