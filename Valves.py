@@ -6,6 +6,9 @@ import AccessValves
 import scanForResources
 import pclogging
 
+
+
+
 def valveCheck():
     if (config.SWDEBUG):
         print(">>>>>>Valve Check<<<<<<")

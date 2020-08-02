@@ -95,13 +95,13 @@ def updateStaticBlynk():
 
         val = str(len(readJSON.getJSONValue("WirelessDeviceJSON")))
         put_body = json.dumps([val])
-        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V13', data=put_body, headers=put_header)
+        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V60', data=put_body, headers=put_header)
         val = str(config.valve_count)
         put_body = json.dumps([val])
-        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V14', data=put_body, headers=put_header)
+        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V61', data=put_body, headers=put_header)
         val = str(config.moisture_sensor_count)
         put_body = json.dumps([val])
-        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V15', data=put_body, headers=put_header)
+        r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V62', data=put_body, headers=put_header)
 
 
         # now do the choices on page two and three
@@ -201,6 +201,14 @@ def blynkStateUpdate():
             val = util.returnTemperatureCF(state.OutdoorTemperature)
             put_body = json.dumps([val])
             r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V12', data=put_body, headers=put_header)
+    
+            val = state.OutdoorHumidity
+            put_body = json.dumps([val])
+            r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V14', data=put_body, headers=put_header)
+    
+            val = util.returnTemperatureCF(state.SunlightVisible)
+            put_body = json.dumps([val])
+            r = requests.put(config.BLYNK_URL+config.BLYNK_AUTH+'/update/V15', data=put_body, headers=put_header)
     
     
         # do the boxes

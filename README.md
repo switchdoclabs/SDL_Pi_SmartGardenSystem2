@@ -2,7 +2,7 @@ SmartGardenSystem 2 - Version May 2020 and on<BR>
 SwitchDoc Labs<BR>
 May 2020<BR>
 
-
+Version 016 - August 1, 2020 - Fixed Pi4 Rev2 problem - Kludge - just disables Pixels
 Version 014 - July 14, 2020 - First Release Version 
 Version 013 - July 13, 2020 - Release Candidate One 
 Version 005 - June 5, 2020 - More modifications to dash_app and wireless

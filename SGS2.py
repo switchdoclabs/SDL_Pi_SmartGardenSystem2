@@ -11,7 +11,7 @@ from __future__ import print_function
 from builtins import range
 from past.utils import old_div
 
-SGSVERSION = "014"
+SGSVERSION = "016"
 
 #imports 
 
@@ -100,10 +100,11 @@ state.UpdateStateLock = threading.Lock()
 ###############
 
 # Create NeoPixel object with appropriate configuration.
-strip = Adafruit_NeoPixel(pixelDriver.LED_COUNT, pixelDriver.LED_PIN, pixelDriver.LED_FREQ_HZ, pixelDriver.LED_DMA, pixelDriver.LED_INVERT, pixelDriver.LED_BRIGHTNESS, pixelDriver.LED_CHANNEL, pixelDriver.LED_STRIP)
-# Intialize the library (must be called once before other functions).
-strip.begin()
-PixelLock = threading.Lock()
+if (config.enablePixel == True):
+    strip = Adafruit_NeoPixel(pixelDriver.LED_COUNT, pixelDriver.LED_PIN, pixelDriver.LED_FREQ_HZ, pixelDriver.LED_DMA, pixelDriver.LED_INVERT, pixelDriver.LED_BRIGHTNESS, pixelDriver.LED_CHANNEL, pixelDriver.LED_STRIP)
+    # Intialize the library (must be called once before other functions).
+    strip.begin()
+    PixelLock = threading.Lock()
 
 
 ###############
@@ -111,7 +112,7 @@ PixelLock = threading.Lock()
 ###############
 
 def blinkLED(pixel, color, times, length):
-
+  if (config.enablePixel == True):
     if (state.runLEDs == True):
         PixelLock.acquire()
 
@@ -458,7 +459,8 @@ def initializeScheduler():
         state.scheduler.add_job(blinkLED, 'interval', seconds=5, args=[0,Color(0,0,255),1,0.250])
         
         # blink life light
-        state.scheduler.add_job(pixelDriver.statusLEDs, 'interval', seconds=15, args=[strip, PixelLock])
+        if (config.enablePixel == True):
+            state.scheduler.add_job(pixelDriver.statusLEDs, 'interval', seconds=15, args=[strip, PixelLock])
     
     
     
@@ -503,6 +505,7 @@ def initializeScheduler():
         state.nextMoistureSensorActivate = tNow
         
         state.scheduler.add_job(Valves.valveCheck, 'interval', minutes=1)
+
     
         # sensor manual water
         state.scheduler.add_job(Valves.manualCheck, 'interval', seconds=15)
