@@ -2,12 +2,13 @@ SmartGardenSystem 2 - Version May 2020 and on<BR>
 SwitchDoc Labs<BR>
 May 2020<BR>
 
-Version 016 - August 1, 2020 - Fixed Pi4 Rev2 problem - Kludge - just disables Pixels
-Version 014 - July 14, 2020 - First Release Version 
-Version 013 - July 13, 2020 - Release Candidate One 
-Version 005 - June 5, 2020 - More modifications to dash_app and wireless
-Version 005 - June 3, 2020 - Added GardenCam / WeatherSTEM code
-Version 003 - May 11, 2020 - Added dashboard code
+Version 017 - August 12, 2020 - Fixed testMoistureSensors.py problem <BR> 
+Version 016 - August 1, 2020 - Fixed Pi4 Rev2 problem - Kludge - just disables Pixels<BR>
+Version 014 - July 14, 2020 - First Release Version <BR>
+Version 013 - July 13, 2020 - Release Candidate One <BR>
+Version 005 - June 5, 2020 - More modifications to dash_app and wireless<BR>
+Version 005 - June 3, 2020 - Added GardenCam / WeatherSTEM code<BR>
+Version 003 - May 11, 2020 - Added dashboard code<BR>
 
 
 To Install Yourself: (Note:  This is a complicated install.   For beginners and advanced beginners, you are better of buying a configured SD Card from shop.switchdoc.com)<BR>
