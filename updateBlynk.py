@@ -414,7 +414,7 @@ def blynkStatusUpdate():
                     if (state.SecondsToTurnOn > 0):
                         if (config.manual_water == True):
                             MQTTFunctions.sendMQTTValve(ControlID, str(state.ValveSelector), 1, str(state.SecondsToTurnOn))
-                            message = "Manual Valve Actuated:"+ myControlName
+                            message = "Manual Valve %d Actuated: %s" % (state.ValveSelector, myControlName)
                             pclogging.systemlog(config.INFO,message)
                  
                             pclogging.valvelog(ControlID, str(state.ValveSelector),1, "Manual Event ", "", state.SecondsToTurnOn)

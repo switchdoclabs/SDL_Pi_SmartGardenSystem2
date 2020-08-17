@@ -22,6 +22,7 @@ def Navbar():
             dbc.NavItem(dbc.NavLink("SGS Status", href="/status_page")),
             dbc.NavItem(dbc.NavLink("Valve Graphs", href="/valve_graphs")),
             dbc.NavItem(dbc.NavLink("Weather", href="/weather_page")),
+            dbc.NavItem(dbc.NavLink("Indoor T/H", href="/indoorth")),
             dbc.NavItem(dbc.NavLink("Hydroponics", href="/hydroponics")),
             dbc.NavItem(dbc.NavLink("Herb Garden", href="/herb_garden")),
             dbc.NavItem(dbc.NavLink("Next Events", href="/valves_scheduled")),

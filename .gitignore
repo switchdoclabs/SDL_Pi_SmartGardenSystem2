@@ -12,4 +12,7 @@ conflocal.py
 __pycache__
 *.JSON
 imagedisplay*
-skycamera.jpg
+static/skycamera.jpg
+static/skycameraprocessed.jpg
+dash_app/assets/skycamera.jpg
+

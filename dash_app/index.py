@@ -23,6 +23,7 @@ import log_page
 import weather_page
 import p_v_programming
 import valves_scheduled
+import indoorth
 
 from non_impl import NotImplPage 
 
@@ -32,7 +33,7 @@ print("new navbar=")
 nav = Navbar()
 
 UpdateCWJSONLock = threading.Lock()
-SGSDASHSOFTWAREVERSION = "004"
+SGSDASHSOFTWAREVERSION = "005"
 
 
 
@@ -112,6 +113,9 @@ def display_page(pathname):
     if pathname == '/weather_page':
         myLayout = weather_page.WeatherPage()
         myLayout2 = ""
+    if pathname == '/indoorth':
+        myLayout = indoorth.IndoorTHPage()
+        myLayout2 = ""
     if pathname == '/p_v_programming':
         myLayout = p_v_programming.PVProgrammingPage()
         myLayout2 = ""
@@ -190,7 +194,7 @@ def logpageupdate(n_intervals, id, value):
     
    #if (True): # 1 minutes -10 second timer
    if ((n_intervals % (1*6)) == 0): # 1 minutes -10 second timer
-    
+    print ("---->inputs:",dash.callback_context.inputs) 
     print(">log_page table Update started",id['index'])
     print("LG-n_intervals=", n_intervals) 
     if (id['index'] == "systemlog"):
@@ -499,6 +503,41 @@ def updatePVProgramming(n_intervals,id, value):
     else:
         raise PreventUpdate
     return [fig]
+
+# Indoor Temperature Humidity
+
+
+@app.callback(
+	      [
+	      Output({'type' : 'WPITHdynamic', 'index' : MATCH}, 'children' ),
+              ],
+              [Input('main-interval-component','n_intervals'),
+              Input({'type' : 'WPITHdynamic', 'index' : MATCH}, 'id' )],
+              [State({'type' : 'WPITHdynamic', 'index' : MATCH}, 'value'  )]
+              )
+
+def updateIndoorTHUpdate(n_intervals,id, value):
+
+
+    if ((n_intervals % (1*6)) == 0) or (n_intervals ==0): # 1 minutes -10 second timer
+    #if ((n_intervals % (5*6)) == 0) or (n_intervals ==0): # 5 minutes -10 second timer
+        print("--->>>updateIndoorTHUpdate", datetime.datetime.now(), n_intervals)
+        print("updateIndoorTH  n_intervals =", n_intervals, id['index'])
+        if (id['index'] ==  'temperature'):
+           timeDelta = datetime.timedelta(days=7)
+           data = indoorth.generateTHData(timeDelta)
+           fig = indoorth.buildTemperatureGraph(data)
+           return [fig]
+        if (id['index'] ==  'humidity'):
+           timeDelta = datetime.timedelta(days=7)
+           data = indoorth.generateTHData(timeDelta)
+           fig = indoorth.buildHumidityGraph(data)
+           return [fig]
+        
+    else:
+        raise PreventUpdate
+    return [value]
+
 
 # valves_scheduled
 @app.callback(

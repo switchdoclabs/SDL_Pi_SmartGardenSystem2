@@ -2,6 +2,8 @@ SmartGardenSystem 2 - Version May 2020 and on<BR>
 SwitchDoc Labs<BR>
 May 2020<BR>
 
+Version 019 - August 14, 2020 - Added Indoor TH page on dash_app<BR> 
+Version 018 - August 13, 2020 - Fixed Manual Valve Activation Log Entry<BR> 
 Version 017 - August 12, 2020 - Fixed testMoistureSensors.py problem <BR> 
 Version 016 - August 1, 2020 - Fixed Pi4 Rev2 problem - Kludge - just disables Pixels<BR>
 Version 014 - July 14, 2020 - First Release Version <BR>

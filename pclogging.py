@@ -107,10 +107,10 @@ def getValveState(id):
                 con = mdb.connect('localhost', 'root', config.MySQL_Password, 'SmartGardenSystem');
                 cur = con.cursor()
                 query = "SELECT * From ValveRecord WHERE DeviceID = '%s' ORDER BY ID DESC LIMIT 1" % id
-                print("query=", query)
+                #print("query=", query)
                 cur.execute(query)
                 myRecords = cur.fetchall()
-                print ('myRecords=',myRecords)
+                #print ('myRecords=',myRecords)
                 if (len(myRecords) == 0):
                     return "V0000000"
                 return  myRecords[0][2]
