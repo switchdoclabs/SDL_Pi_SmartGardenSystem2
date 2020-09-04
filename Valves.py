@@ -7,6 +7,26 @@ import scanForResources
 import pclogging
 
 
+def getDayDelay(DOWCoverage, currentDayOfWeek):
+    
+    if (DOWCoverage[currentDayOfWeek] == "Y"):
+        return 0
+    delay = 0
+    for i in range(0,6):
+       nextDay = (currentDayOfWeek +i ) % 7
+       print("currentDayOfWeek =", currentDayOfWeek, i)
+       if (DOWCoverage[nextDay] == "Y"):
+        return delay
+       else:
+        delay = delay+1
+    return delay
+        
+def checkDOWCoverage(DOWCoverage):
+    if (DOWCoverage == "NNNNNNN"):
+        return False
+    return True
+
+
 
 
 def valveCheck():
@@ -29,7 +49,7 @@ def valveCheck():
         # check for timed
         ################# 
 
-        if (single["Control"] == "Timed"):
+        if ((single["Control"] == "Timed") and (single["DOWCoverage"] != "NNNNNNN")):
            
             if (stateValveCheck(single["id"],single["ValveNumber"])):
                     #print("valveState Found for",single["id"],single["ValveNumber"])
@@ -37,7 +57,19 @@ def valveCheck():
                     nowTime = datetime.datetime.now()
                     
                     if (NextTime <= nowTime): 
-                   
+                  
+                        myTempTime = single["StartTime"].split(":")
+ 
+                        currentDayOfWeek = int(datetime.datetime.today().strftime('%w'))
+                        # check for DOW coverage
+                        dayDelay = getDayDelay(single["DOWCoverage"], currentDayOfWeek)
+                        if (dayDelay > 0):
+                            nowTime = datetime.datetime.now() + datetime.timedelta(days=dayDelay)
+                            nowTime = nowTime.replace(hour=int(myTempTime[0]), minute=int(myTempTime[1]),second=0,microsecond=0)
+                        else:
+                             nowTime = datetime.datetime.now()
+
+
                         #set up next fire
                         timeDelta = getTimeDelta(single["TimerSelect"])
                         while NextTime < nowTime:
@@ -58,7 +90,7 @@ def valveCheck():
                     "LengthTurnOn": single["OnTimeInSeconds"]
                     }
                 state.valveStatus.append(newValve)
-        
+                print("newValve=", newValve) 
         ################# 
         # check for MS Control
         ################# 
@@ -172,10 +204,20 @@ def calculateFirstTime(single):
     
     myStartTime = nowTime.replace(hour=int(myTempTime[0]), minute=int(myTempTime[1]),second=0,microsecond=0)
 
+    
+    # check for DOW coverage
+    currentDayOfWeek = int(datetime.datetime.today().strftime('%w'))
+    dayDelay = getDayDelay(single["DOWCoverage"], currentDayOfWeek)
+    if (dayDelay > 0):
+        myDelta = datetime.timedelta(days=dayDelay)
+    else:
+        myDelta = datetime.timedelta(days=0)
+        
+
     if (myStartTime > nowTime):
         NextTime = myStartTime 
     else:
-        NextTime = myStartTime + timeDelta
+        NextTime = myStartTime + timeDelta + myDelta
 
    
     return NextTime

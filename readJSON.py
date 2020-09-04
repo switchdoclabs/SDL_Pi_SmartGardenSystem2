@@ -18,6 +18,18 @@ def readJSONSGSConfiguration(addPath):
                                         }
             #print("Default JSONData for SGSConfigFile=", config.SGSConfigurationJSON)
             JSONsetDefaults()
+        updateValves()
+
+def updateValves():
+
+    # this is for updating existing valve files to new functionality on read in
+    #
+    for singleValve in config.SGSConfigurationJSON["Valves"]:
+        # new for Version 020 - DOW Coverage
+        try:
+            temp = singleValve["DOWCoverage"]
+        except:
+            singleValve["DOWCoverage"] = "YYYYYYY"
 
         
 def readJSON(addPath):

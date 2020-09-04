@@ -34,11 +34,39 @@ readJSON.readJSONSGSConfiguration("../")
 
 import MySQLdb as mdb
 
+def getDayDelay(DOWCoverage, currentDayOfWeek):
+    
+    if (DOWCoverage[currentDayOfWeek] == "Y"):
+        return 0
+    delay = 0
+    for i in range(0,6):
+       nextDay = (currentDayOfWeek +i ) % 7
+       print("currentDayOfWeek =", currentDayOfWeek, i)
+       if (DOWCoverage[nextDay] == "Y"):
+        return delay
+       else:
+        delay = delay+1
+    return delay
+        
+def checkDOWCoverage(DOWCoverage):
+    if (DOWCoverage == "NNNNNNN"):
+        return False
+    return True
 
 
-def getTimeDelta(timerValue):
+def getTimeDelta(timerValue, DOWCoverage):
+
+
+
 
     timeDelta = datetime.timedelta(minutes=15)
+    # calculate DWO coverage difference
+    #currentDayOfWeek = int(datetime.datetime.today().strftime('%w'))
+    # 0 is Sunday
+
+    #dayDelay = getDayDelay(DOWCoverage, currentDayOfWeek) 
+    #print("dayDelay=", dayDelay)
+    dayDelay = 0
 
     if (timerValue == "Daily"):
         timeDelta = datetime.timedelta(days=1)
@@ -54,18 +82,18 @@ def getTimeDelta(timerValue):
         timeDelta = datetime.timedelta(minutes=30)
     if (timerValue == "15 Minutes"):
         timeDelta = datetime.timedelta(minutes=15)
-    return timeDelta 
+    return timeDelta + datetime.timedelta(days=dayDelay)
 
 
 ################
 # p_v Page
 ################
 def buildTableFig(myData, title):
-    print("myData=", myData)
+    #print("myData=", myData)
     if (title=="Next Scheduled Events"):
         fig = go.Figure(data=[
 		go.Table(
-                   columnwidth = [300,100,150,200,150,400],
+                   columnwidth = [300,100,150,200,150,100,300],
                    header = dict(
                      values = [
                                    ['<b>Next Scheduled</b>'], 
@@ -73,6 +101,7 @@ def buildTableFig(myData, title):
                                    ['<b>ID</b>'], 
                                    ['<b>Unit Name</b>'],
                                    ['<b>Valve Number</b>'],
+                                   ['<b>Day of Week Coverage (Su-Sa)</b>'],
                                    ['<b>Control</b>'],
                                    ],
                      line_color='darkslategray',
@@ -133,6 +162,7 @@ def fetchProgramming():
     myIDList = []
     myNameList = []
     myValveNumberList = []
+    myDOWCoverageList = []
     myControlList = []
 
     for wireless in wirelessJSON:
@@ -147,31 +177,47 @@ def fetchProgramming():
                 if len(currentValve) > 0:
                     #print ('currentValve=', currentValve)
                     myControl = currentValve["Control"]
-
+                    DOWNever = ""
+                    if (currentValve["DOWCoverage"] == "NNNNNNN"):
+                       DOWNever = "(COW: Never)" 
                     if (myControl[0:2] == "MS"):   # found Moisture sensor
-                        nextScheduleList.append("Moisture Sensor")
+                        nextScheduleList.append("Moisture Sensor " + DOWNever)
                     else:
                         if (myControl[0:3] == "Off"):   # found Moisture sensor
                             nextScheduleList.append("Off")
                         else:
                             myTempTime = currentValve["StartTime"].split(":")
                             NextTime = datetime.datetime.now() - datetime.timedelta(days=1) 
+                            # if DOWCoverage current DOW is "N" then advance one day
+                            currentDayOfWeek = int(datetime.datetime.today().strftime('%w'))
+                            if (currentValve["DOWCoverage"][currentDayOfWeek] == "N"):
+                                NextTime = NextTime - datetime.timedelta(days=1)
                             NextTime = NextTime.replace(hour=int(myTempTime[0]), minute=int(myTempTime[1]),second=0,microsecond=0)
 
-                            nowTime = datetime.datetime.now()
-
+                            dayDelay = getDayDelay(currentValve["DOWCoverage"], currentDayOfWeek) 
+                            if (dayDelay > 0):
+                                nowTime = datetime.datetime.now() + datetime.timedelta(days=dayDelay)
+                                nowTime = nowTime.replace(hour=int(myTempTime[0]), minute=int(myTempTime[1]),second=0,microsecond=0)
+                            else:
+                                 nowTime = datetime.datetime.now() 
+                        
                             if (NextTime <= nowTime):
         
                                 #set up next fire
-                                timeDelta = getTimeDelta(currentValve["TimerSelect"])
+                                timeDelta = getTimeDelta(currentValve["TimerSelect"], currentValve["DOWCoverage"])
                                 while NextTime < nowTime:
                                     NextTime = NextTime + timeDelta
                                 myNextTime = NextTime.strftime('%Y-%m-%d %H:%M:%S')
  
-                                nextScheduleList.append(myNextTime)
+                                if (currentValve["DOWCoverage"] == "NNNNNNN"):
+                                    DOWNever = "COW: Never" 
+                                    nextScheduleList.append(DOWNever)
+                                else:
+                                    nextScheduleList.append(myNextTime)
                         
                     myTimeOn.append(str(currentValve["OnTimeInSeconds"]))
                     myValveNumberList.append(str(currentValve["ValveNumber"]))
+                    myDOWCoverageList.append(str(currentValve["DOWCoverage"]))
                     myControlList.append(str(currentValve["Control"]))
                 
 
@@ -180,8 +226,9 @@ def fetchProgramming():
     myArray.append( myIDList)
     myArray.append(myNameList)
     myArray.append(myValveNumberList)
+    myArray.append(myDOWCoverageList)
     myArray.append(myControlList)
-    print('myArray=', myArray) 
+    #print('myArray=', myArray) 
 
     return myArray
 

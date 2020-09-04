@@ -434,7 +434,7 @@ class SGSConfigure(App):
 
 
         # now set up new block
-        self.ValveBlock = gui.Container(width=1000, height=500, layout_orientation=gui.Container.LAYOUT_HORIZONTAL)
+        self.ValveBlock = gui.Container(width=1000, height=700, layout_orientation=gui.Container.LAYOUT_HORIZONTAL)
         self.ValveBlock.style['background'] = "LightGray"
 
         self.ValveBlock.style['align-items'] = 'right'
@@ -501,6 +501,7 @@ class SGSConfigure(App):
                 "Control": "Off",
                 "MSThresholdPercent": "65",
                 "TimerSelect": "Daily",
+                "DOWCoverage": "1111111",
                 "StartTime": "05:00",
                 "OnTimeInSeconds": "10",
                 "ShowGraph" : False
@@ -537,10 +538,111 @@ class SGSConfigure(App):
             #singleValve = json.loads(str(singleValve))
             if (str(singleValve["id"]).replace(" ", "") == str(myID).replace(" ", "")):
                 if (str(singleValve["ValveNumber"]) == str(valveNumber)):
+                    # check for update to Valve Info
+                    try:
+                        DWO = singleValve["DOWCoverage"]
+                    except:
+                        singleValve["DOWCoverage"] = "YYYYYYY"
+
+                    #print (singleValve)
                     return singleValve
         return {}
         
 
+    def checkDOW(self,singleValve, DOW):
+
+        if (DOW == "Su"):
+            if (singleValve["DOWCoverage"][0] == "Y"):
+                return True
+            else:
+                return False
+        if (DOW == "Mo"):
+            if (singleValve["DOWCoverage"][1] == "Y"):
+                return True
+            else:
+                return False
+        if (DOW == "Tu"):
+            if (singleValve["DOWCoverage"][2] == "Y"):
+                return True
+            else:
+                return False
+        if (DOW == "We"):
+            if (singleValve["DOWCoverage"][3] == "Y"):
+                return True
+            else:
+                return False
+        if (DOW == "Th"):
+            if (singleValve["DOWCoverage"][4] == "Y"):
+                return True
+            else:
+                return False
+        if (DOW == "Fr"):
+            if (singleValve["DOWCoverage"][5] == "Y"):
+                return True
+            else:
+                return False
+        if (DOW == "Sa"):
+            if (singleValve["DOWCoverage"][0] == "Y"):
+                return True
+            else:
+                return False
+
+        return False
+
+
+    def setDOW(self,singleValve, DOW, value):
+
+        if (value):
+            checkValue = "Y"
+        else:
+            checkValue = "N"
+        print("Args pre DOW", singleValve, DOW, value, checkValue)
+
+        newValue = ""
+        
+        if (DOW == "Su"):
+            newValue += checkValue
+        else:
+            newValue += singleValve["DOWCoverage"][0]
+        if (DOW == "Mo"):
+            newValue += checkValue
+        else:
+            newValue += singleValve["DOWCoverage"][1]
+            
+        if (DOW == "Tu"):
+            newValue += checkValue
+        else:
+            newValue += singleValve["DOWCoverage"][2]
+           
+        if (DOW == "We"):
+            newValue += checkValue
+        else:
+            newValue += singleValve["DOWCoverage"][3]
+          
+        if (DOW == "Th"):
+            newValue += checkValue
+        else:
+            newValue += singleValve["DOWCoverage"][4]
+         
+        if (DOW == "Fr"):
+            newValue += checkValue
+        else:
+            newValue += singleValve["DOWCoverage"][5]
+        
+        if (DOW == "Sa"):
+            newValue += checkValue
+        else:
+            newValue +=  singleValve["DOWCoverage"][6]
+      
+        singleValve["DOWCoverage"] = newValue
+
+        print("singleValve Post DOW", singleValve)
+        return False
+
+
+
+
+        
     def updateValveJSON(self, myID, valveNumber):
         # update the JSON and return the list of Valves
         
@@ -564,10 +666,19 @@ class SGSConfigure(App):
                     singleValve["MSThresholdPercent"] = self.DisplayST_MS.get_text()
                     singleValve["TimerSelect"] = self.dropDownTimed.get_value()
                     singleValve["StartTime"] = self.DisplayST_TB.get_text()
-                    print("Before-OTS", singleValve["OnTimeInSeconds"])
+                    #print("Before-OTS", singleValve["OnTimeInSeconds"])
                     singleValve["OnTimeInSeconds"] = self.DisplayOTS_TB.get_text()
                     singleValve["ShowGraph"] = self.DisplaySG_CB.get_value() 
 
+                    # DOW Filter
+                    self.setDOW(singleValve, "Su", self.Display_Su.get_value())
+                    self.setDOW(singleValve, "Mo", self.Display_Mo.get_value())
+                    self.setDOW(singleValve, "Tu", self.Display_Tu.get_value())
+                    self.setDOW(singleValve, "We", self.Display_We.get_value())
+                    self.setDOW(singleValve, "Th", self.Display_Th.get_value())
+                    self.setDOW(singleValve, "Fr", self.Display_Fr.get_value())
+                    self.setDOW(singleValve, "Sa", self.Display_Sa.get_value())
+                    
             
                     print("aftersingleValve-OTS", singleValve["OnTimeInSeconds"])
                     print ("updatedSingleValve=", singleValve)
@@ -575,11 +686,11 @@ class SGSConfigure(App):
              #myNewValves.append(singleValve)
 
 
-        print("myValves=", myValves)
+        #print("myValves=", myValves)
         
         self.SGSConfigurationJSON["Valves"] = myValves
 
-        print ("updatedSGSConfigurationJSON=", self.SGSConfigurationJSON)
+        #print ("updatedSGSConfigurationJSON=", self.SGSConfigurationJSON)
 
             
         pass
@@ -609,7 +720,7 @@ class SGSConfigure(App):
 
 
     def buildAValve(self, DeviceID, name, myUnit):
-        myValve = gui.Container(width=300, height=400, layout_orientation=gui.Container.LAYOUT_VERTICAL)
+        myValve = gui.Container(width=300, height=700, layout_orientation=gui.Container.LAYOUT_VERTICAL)
         myValve.style['background'] = "LightBlue"
 
         myValve.style['align-items'] = 'right'
@@ -659,12 +770,22 @@ class SGSConfigure(App):
 
         self.DisplayMS = gui.Label('Moisture Sensor Threshold Percent',width=300, height=15, margin='10px')
         self.DisplayST_MS = gui.TextInput(width=100, height=15, style="margin:10px")
+        self.DisplayDOW = gui.Label('Day of Week Filter',width=200, height=15, margin='10px')
+        self.Display_Su = gui.CheckBoxLabel( 'Su', False, height=30, style='margin:5px; background: LightGray ')
+        self.Display_Mo = gui.CheckBoxLabel( 'Mo', False, height=30, style='margin:5px; background: LightGray ')
+        self.Display_Tu = gui.CheckBoxLabel( 'Tu', False, height=30, style='margin:5px; background: LightGray ')
+        self.Display_We = gui.CheckBoxLabel( 'We', False, height=30, style='margin:5px; background: LightGray ')
+        self.Display_Th = gui.CheckBoxLabel( 'Th', False, height=30, style='margin:5px; background: LightGray ')
+        self.Display_Fr = gui.CheckBoxLabel( 'Fr', False, height=30, style='margin:5px; background: LightGray ')
+        self.Display_Sa = gui.CheckBoxLabel( 'Sa', False, height=30, style='margin:5px; background: LightGray ')
 
         self.DisplayTimed = gui.Label('Timer Selection',width=200, height=15, margin='10px')
         self.dropDownTimed = gui.DropDown.new_from_list(self.TimedItems, width=200, height=20, margin='10px')
 
         self.dropDownTimed.select_by_value('N/A' )        
         self.dropDownTimed.set_enabled(False)
+        
+       
 
 
         self.DisplayST = gui.Label('Start Time',width=200, height=15, margin='10px')
@@ -687,6 +808,14 @@ class SGSConfigure(App):
         myValve.append(self.dropDownMSSensor)
         myValve.append(self.DisplayMS)
         myValve.append(self.DisplayST_MS)
+        myValve.append(self.DisplayDOW)
+        myValve.append(self.Display_Su)
+        myValve.append(self.Display_Mo)
+        myValve.append(self.Display_Tu)
+        myValve.append(self.Display_We)
+        myValve.append(self.Display_Th)
+        myValve.append(self.Display_Fr)
+        myValve.append(self.Display_Sa)
         myValve.append(self.DisplayTimed)
         myValve.append(self.dropDownTimed)
         myValve.append(self.DisplayST)
@@ -754,6 +883,13 @@ class SGSConfigure(App):
                 self.DisplayST_TB.set_enabled(False)
                 self.dropDownTimed.set_enabled(False)
        
+            self.Display_Su.set_value(self.checkDOW(valveJSON, "Su"))
+            self.Display_Mo.set_value(self.checkDOW(valveJSON, "Mo"))
+            self.Display_Tu.set_value(self.checkDOW(valveJSON, "Tu"))
+            self.Display_We.set_value(self.checkDOW(valveJSON, "We"))
+            self.Display_Th.set_value(self.checkDOW(valveJSON, "Th"))
+            self.Display_Fr.set_value(self.checkDOW(valveJSON, "Fr"))
+            self.Display_Sa.set_value(self.checkDOW(valveJSON, "Sa"))
 
 
         else:
@@ -788,7 +924,7 @@ class SGSConfigure(App):
 
 
         myValves = self.SGSConfigurationJSON["Valves"]
-        myArray = [('ID', 'Unit Name', 'Valve Number','Control','MS Threshold', 'Time Select', 'Start Time', 'On Time (seconds)')]
+        myArray = [('ID', 'Unit Name', 'Valve Number','Control','MS Threshold','DOW Filter (Su-Sa)', 'Time Select', 'Start Time', 'On Time (seconds)')]
 
             
         # loop through wireless
@@ -808,6 +944,7 @@ class SGSConfigure(App):
                     myList.append(str(currentValve["ValveNumber"]))
                     myList.append(str(currentValve["Control"]))
                     myList.append(str(currentValve["MSThresholdPercent"]))
+                    myList.append(str(currentValve["DOWCoverage"]))
                     myList.append(str(currentValve["TimerSelect"]))
                     myList.append(str(currentValve["StartTime"]))
                     myList.append(str(currentValve["OnTimeInSeconds"]))
@@ -1382,7 +1519,7 @@ class SGSConfigure(App):
 
 
         logo = SuperImage("./static/SGfulllogocolor.png", width=400, height =142)
-        header = gui.Label("Smart Garden System Configuration Tool V003", style='position:absolute; left:150px; top:120px')
+        header = gui.Label("Smart Garden System Configuration Tool V004", style='position:absolute; left:150px; top:120px')
         # bottom buttons
 
         cancel = gui.Button('Cancel',style='position:absolute; left:550px; height: 30px; width:100px; margin:10px; top:5px')

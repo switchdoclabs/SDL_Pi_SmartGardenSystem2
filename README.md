@@ -2,6 +2,7 @@ SmartGardenSystem 2 - Version May 2020 and on<BR>
 SwitchDoc Labs<BR>
 May 2020<BR>
 
+Version 020 - September 4, 2020 - Added Orchid Features, small bug fixes<BR>
 Version 019 - August 14, 2020 - Added Indoor TH page on dash_app<BR> 
 Version 018 - August 13, 2020 - Fixed Manual Valve Activation Log Entry<BR> 
 Version 017 - August 12, 2020 - Fixed testMoistureSensors.py problem <BR> 

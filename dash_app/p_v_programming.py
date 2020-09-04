@@ -44,12 +44,13 @@ def buildTableFig(myData, title):
     if (title=="Pump and Valve Programming"):
         fig = go.Figure(data=[
 		go.Table(
-                   columnwidth = [150,200,150,500,150,150,150,150,150 ],
+                   columnwidth = [150,200,150,500,150,150,150,150,150,150 ],
                    header = dict(
                      values = [['<b>ID</b>'], ['<b>Unit Name</b>'],
                                    ['<b>Valve Number</b>'],
                                    ['<b>Control</b>'],
                                    ['<b>MS Threshold</b>'],
+                                   ['<b>DOW Filter (Su-Sa)</b>'],
                                    ['<b>Time Select</b>'],
                                    ['<b>Start Time</b>'],
                                    ['<b>On Time (Seconds)</b>'],
@@ -109,6 +110,7 @@ def fetchProgramming():
     myValveNumberList = []
     myControlList = []
     myMSThresholdPercentList = []
+    myDOWCoverageList = []
     myTimerSelectList = []
     myStartTimeList = []
     myOnTimeInSecondsList = []
@@ -143,11 +145,12 @@ def fetchProgramming():
                 myNameList.append(str(myName))
                 currentValve = fetchValveJSON(myID, i)
                 if len(currentValve) > 0:
-                    #print ('currentValve=', currentValve)
+                    print ('currentValve=', currentValve)
 
                     myValveNumberList.append(str(currentValve["ValveNumber"]))
                     myControlList.append(str(currentValve["Control"]))
                     myMSThresholdPercentList.append(str(currentValve["MSThresholdPercent"]))
+                    myDOWCoverageList.append(str(currentValve["DOWCoverage"]))
                     myTimerSelectList.append(str(currentValve["TimerSelect"]))
                     myStartTimeList.append(str(currentValve["StartTime"]))
                     myOnTimeInSecondsList.append(str(currentValve["OnTimeInSeconds"]))
@@ -159,6 +162,7 @@ def fetchProgramming():
     myArray.append(myValveNumberList)
     myArray.append(myControlList)
     myArray.append(myMSThresholdPercentList) 
+    myArray.append(myDOWCoverageList) 
     myArray.append(myTimerSelectList) 
     myArray.append(myStartTimeList) 
     myArray.append(myOnTimeInSecondsList) 

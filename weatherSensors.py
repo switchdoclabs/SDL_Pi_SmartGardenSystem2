@@ -84,13 +84,14 @@ def processF300Data(sLine):
         if (config.SWDEBUG):
             sys.stdout.write("error--->>> Temperature reading from F300\n")
             sys.stdout.write('This is the raw temperature: ' + str(wTemp) + '\n')
-        # put in previous temperature 
-        wtemp = state.OutdoorTemperature 
+        # now stop this reading
+        return
+ 
     #print("wTemp=%s %s", (str(wTemp),nowStr() ));
     if (ucHumi > 100.0):
         # bad humidity
-        # put in previous humidity
-        ucHumi  = state.OutdoorHumidity
+        # now stop this reading
+        return
      
     state.OutdoorTemperature = round(((wTemp - 32.0)/(9.0/5.0)),2)
     state.OutdoorHumidity =  ucHumi 
