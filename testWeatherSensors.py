@@ -62,9 +62,9 @@ while True:
         sLine = line.decode()
         print(sLine)
         #   See if the data is something we need to act on...
-        if ( sLine.find('F007TH') != -1):
+        if (( sLine.find('F007TH') != -1) or ( sLine.find('F016TH') != -1)): 
             sys.stdout.write('This is the raw data: ' + sLine + '\n')
-        if ( sLine.find('FT0300') != -1):
+        if (( sLine.find('FT0300') != -1) or ( sLine.find('FT020T') != -1)):
             sys.stdout.write('This is the raw data: ' + sLine + '\n')
 
 

@@ -237,11 +237,11 @@ def readSensors():
             pulse -= 1
             sLine = line.decode()
             #   See if the data is something we need to act on...
-            if ( sLine.find('F007TH') != -1) or ( sLine.find('FT0300') != -1):
+            if ( sLine.find('F007TH') != -1) or ( sLine.find('FT0300') != -1) or ( sLine.find('F016TH') != -1) or ( sLine.find('FT020T') != -1):
                 
-                if ( sLine.find('F007TH') != -1): 
+                if (( sLine.find('F007TH') != -1) or ( sLine.find('F016TH') != -1)): 
                     processF007THData(sLine)
-                if ( sLine.find('FT0300') != -1): 
+                if (( sLine.find('FT0300') != -1) or ( sLine.find('FT020T') != -1)): 
                     processF300Data(sLine)
 
         sys.stdout.flush()
