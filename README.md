@@ -41,6 +41,20 @@ sudo pip3 install plotly<BR>
 
 sudo pip3 install remi<BR>
 
+6) Install Mosquitto <BR>
+sudo apt-get install mosquitto mosquitto-clients
+
+sudo pip install paho-mqtt
+
+Then this command will return some results:
+
+sudo mosquitto_sub -d -t SGS/#
+
+And then run this if you want it to survive a reboot.
+
+sudo systemctl enable mosquitto
+
+
 
 Depending on your system, you may have other missing files.   See the information printed out when your SGS2.py software starts and install the missing librarys.
 <BR>
